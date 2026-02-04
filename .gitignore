@@ -1,3 +1,6 @@
+# macOS system files
+.DS_Store
+
 ## Core LaTeX auxiliary files
 *.aux
 *.fdb_latexmk
@@ -11,10 +14,8 @@
 *.bbl
 *.blg
 
-## Build artifacts 
-# (Uncomment the line below if you do NOT want to push your final PDF)
-# thws-mai-pm-template.pdf
+# Ignore the entire .vscode folder contents
+.vscode/*
 
-## VS Code specific
-.vscode/
+# But do not ignore the settings.json file
 !.vscode/settings.json

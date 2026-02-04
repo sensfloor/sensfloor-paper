@@ -1,0 +1,26 @@
+% General overview of how to solve the problem (localization and pose prediction)
+
+% Data collection (important: mention how our data looks like)
+% - Who did we collect?
+% - How does the recording setup look like?
+% - Collect video and sensfloor at the same time -> Output: mp4 and csv
+% - Creating labels for training using Mediapipe -> Output: Ground truth joint positions in coordinate system with hip as origin
+
+% Describe training of the model
+% - Model architecture: Supervised regression model
+% - Data split
+% - Loss (link loss, MSE)
+% - Metrics (PCK, MJPE)
+% - Training setup (config) and how we determined the hyperparameters -> Mention what joints we predict here (or in data collection)
+% - What is the output?
+
+% Describe localization
+% - Sensor & clustering of signals
+% - Kalman filter approach
+% - Component values
+% - What is the output?
+
+% Describe how localization and pose prediction are combined -> Summary that connects training and localization outputs
+
+% How to visualize floor and predicted pose
+% - Setup for live predictions
