@@ -1,0 +1,19 @@
+## Core LaTeX auxiliary files
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
+## Bibliography files
+*.bbl
+*.blg
+
+## Build artifacts 
+# (Uncomment the line below if you do NOT want to push your final PDF)
+# thws-mai-pm-template.pdf
+
+## VS Code specific
+.vscode/
