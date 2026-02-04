@@ -53,9 +53,7 @@
 
 %% The abstract is a short summary of the work to be presented in the article.
 \begin{abstract}
-This paper is a sample \LaTeX\ document to be reused by students of the Master's in Artificial Intelligence of the THWS in preparing their final papers for the Project Module.
-The document covers the commonly employed parts and elements of a scientific paper and instructions how to correctly include them.
-There are, however, many more features in the \LaTeX\ typesetting system than can be used when writing a paper and students are expected to explore these on their own and employ these as appropriate.
+\input{sections/00-abstract.tex}
 \end{abstract}
 
 %% Keywords: pick words that accurately describe the work being presented. Separate the keywords with commas - not used.
@@ -76,7 +74,7 @@ This \LaTeX\ template fixes the basic formatting requirements for the paper such
 As an author you only need to follow a few basic rules explained here below and ensure that the paper does not exceed \textbf{four pages}. 
 Acknowledgments and references do not count into this limit and can be on the fifth page.
 The \textbf{four pages} is a hard constraint, make sure you do not go over!
-
+\input{sections/00-abstract.tex}
 \section{Title Information}
 The title of your work should use capital letters appropriately - \url{https://capitalizemytitle.com/} has useful rules for capitalization.
 Use the {\verb|title|} command to define the title of your work.
@@ -326,13 +324,6 @@ Figure~\ref{fig:star} shows a PNG image.
 
 \begin{figure}
     \centering
-    \includegraphics[scale=0.5]{circles.pdf}
-    \caption{A sample circles graphic (PDF format).}
-    \label{fig:circles}
-\end{figure}
-
-\begin{figure}
-    \centering
     \includegraphics[scale=0.5]{img/star.png}
     \caption{A sample star graphic (PNG format).}
     \label{fig:star}
@@ -465,3 +456,7 @@ ante. Etiam aliquam tortor auctor efficitur mattis.
 
 \end{document}
 %% End of file `thws-mai-pm-template.tex'
+
+
+
+
