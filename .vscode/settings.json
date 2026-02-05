@@ -8,12 +8,5 @@
         "**/*.out": true,
         "**/*.blg": true,
         "**/*.bbl": true
-    },
-    "cSpell.words": [
-        "hyperparameters",
-        "Kalman",
-        "Mediapipe",
-        "sensfloor"
-    ],
+    }
 }
-

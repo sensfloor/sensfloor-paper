@@ -13,9 +13,3 @@
 ## Bibliography files
 *.bbl
 *.blg
-
-# Ignore the entire .vscode folder contents
-.vscode/*
-
-# But do not ignore the settings.json file
-!.vscode/settings.json

@@ -1,5 +1,15 @@
-This paper is a sample \LaTeX\ document to be reused by students of the Master's in Artificial Intelligence of the THWS in preparing their final papers for the Project Module.
-The document covers the commonly employed parts and elements of a scientific paper and instructions how to correctly include them.
-There are, however, many more features in the \LaTeX\ typesetting system than can be used when writing a paper and students are expected to explore these on their own and employ these as appropriate.
+While camera-based systems are the dominant approach for human pose estimation, they face several challenges in terms of privacy and occlusion effects.
+These issues are of particular importance in domains such as elderly care, where it could be useful to monitor the residents to conclude about their health
+conditions or backtrack incidents.
+To assess an alternative for camera based pose estimation, this paper aims to predict walking poses using SensFloor: 
+a capacitive-based floor which registers movement activity.
+In this context we analyze whether it is possible to use the floors low resolution signal to fulfil this task and to what
+extent certain joint positions can be predicted correctly. 
 
-\todo{Test :)}
+For this purpose, we collected synchronized data of SensFloor signals combined with a video capture. 
+To extract human poses from the video as reference labels for training, we use MediaPipe's 3D pose estimation model.
+The SensFloor signals together with the labels are used for supervised training of an LSTM neural network. 
+To localize the poses on the floor, we use a Kalman filter which processes the same signals.
+
+Our results demonstrate, that it is possible to predict human walking poses using the proposed methods,
+establishing a proof-of-concept for an alternative way of activity monitoring.
