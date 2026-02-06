@@ -11,9 +11,27 @@
 % - Data (roi, history)
 % - Data split
 % - Loss (link loss, MSE)
-% - Metrics (PCK, MJPE)
 % - Training setup (config) and how we determined the hyperparameters -> Mention what joints we predict here (or in data collection)
+% - Metrics (PCK, MJPE)
 % - What is the output?
+\subsection{Training Setup}
+We used a CNN-LSTM architecture for training our model. It is based on the model from \todo{cite correctly}.
+Instead of rotating the step, we use a CNN to account for the Translation invariance.
+Figure STH shows the full architecture. 
+Instead of giving the model all signals of the floor, we construct a Region of Interest (ROI)
+which is a part of the floor containing the most signals in a defined sequence.
+A sequence is a collection of frames. For each frame we have a state of the floor with certain signals.
+Our model receives the signals in the ROI frame by frame and produces a vector with continuous values as logits.
+These logits are given into our Loss function which can be mathematically described in the following
+\todo{replace with correct equation}
+We substract the predictions from the reference labels, square and multiply the weights of the landmarks.
+The link loss is identical to the one in \todo{replace with correct cite}
+We assume an upright position, this is why the upper body and the head will only rotate and the focus is more on the knee and feet
+Mediapipe extracts 33 Joints, we only used 13, excluding the fingers, face expression, heels and foot index.
+For each epoch we calculate the following metrics: Mean joint position error (MJPE), percentage correct keypoits (PCK) with a 5 and 10 threshold
+
+
+We assume only one person is walking on the floor
 
 % Describe localization
 % - Sensor & clustering of signals
