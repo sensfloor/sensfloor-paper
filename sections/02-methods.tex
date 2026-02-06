@@ -1,13 +1,25 @@
 \section{Methods}
 \label{sec:methods}
 % General overview of how to solve the problem (localization and pose prediction)
+The final goal of this project is to design a system that reads SensFloor signals, processes them, and visualizes the person's gait within a virtual simulation.
+To achieve this goal, we split up the problem into two components: pose estimation and localization. 
+The process of both components is illustrated in figure \ref{fig:methods-overview}.
+By separating these tasks, the system is able to use a small localized active area of the floor for pose estimation. 
+Afterward this pose is mapped across the global floor coordinates. This enables the system to be ported to various floors of different dimensions.
+
+For pose estimation component, we implemented a supervised fine-tuning pipeline. For that we collected reference pose estimates from a MediaPipe to serve as labels.
+Using these labels, we trained a Long Short-Term Memory (LSTM) to predict human poses based on SensFloor activations within an extracted Region of Interest (ROI).
+To localize the estimated pose, a Kalman Filter processes the noisy sensor signals to determine the person's global coordinates.
+Finally, the combined data of pose and position is streamed to a frontend application for real-time visualization.
+
+
 \cite{bowman:reasoning} % File only compiles when at least one ref is provided
 \begin{figure}[htbp]
     \centering
     \includegraphics{img/methods-overview.pdf}
-    \caption{Test caption}
-    \Description{Test description}
-    \label{fig:test}
+    \caption{TEST TEST}
+    \Description{Test :D}
+    \label{fig:methods-overview}
 \end{figure}
 
 % Data collection (important: mention how our data looks like)
