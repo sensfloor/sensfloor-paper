@@ -27,6 +27,14 @@ Finally, the combined data of pose and position is streamed to a frontend applic
 % - How does the recording setup look like?
 % - Collect video and sensfloor at the same time -> Output: mp4 and csv
 % - Creating labels for training using Mediapipe -> Output: Ground truth joint positions in coordinate system with hip as origin
+\subsection{Data collection}
+The model developed in this paper takes SensFloor signals as input to predict the 3D joint coordinates of a person walking on the floor.
+To train and evaluate such a model, we recorded in two sessions a total of eight \todo{Look up actual duration} hours of synchronized SensFloor signals and video from three participants.
+To synchronize the data, we mapped the SensFloor signals to the corresponding video frame number at their time of occurrence.
+In post-processing, we used MediaPipe \todo{cite} to extract 3D pose estimates from the video to serve as training targets.
+It is important to mention here that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips.
+This allows us to decompose the paper's problem into the previously mentioned two components of pose estimation relative to the hip and localization on the whole floor.
+
 
 % Describe training of the model
 % - Model architecture: Supervised regression model
