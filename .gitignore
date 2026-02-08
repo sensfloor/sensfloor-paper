@@ -13,3 +13,6 @@
 ## Bibliography files
 *.bbl
 *.blg
+
+# Backup file drawio
+.$*.bkp
