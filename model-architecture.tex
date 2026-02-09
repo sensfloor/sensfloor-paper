@@ -1,4 +1,4 @@
-\documentclass[tikz, border=10pt]{standalone}
+\documentclass[tikz, border=0pt]{standalone}
 \usepackage{tikz}
 \usetikzlibrary{positioning, fit, arrows.meta, backgrounds, calc, shapes.geometric, shadows}
 \begin{document}
@@ -8,13 +8,13 @@
     >={Stealth[length=2mm]},
     % Styles
     tensor/.style={
-        draw, fill=blue!10, rectangle, minimum height=1.5cm, minimum width=0.5cm, align=center, inner sep=2pt
+        draw, fill=blue!10, rectangle, minimum height=1.7cm, minimum width=0.5cm, align=center, inner sep=2pt
     },
     convblock/.style={
-        draw, fill=orange!10, rectangle, rounded corners, minimum height=1cm, minimum width=2.5cm, align=center, drop shadow
+        draw, fill=orange!10, rectangle, rounded corners, minimum height=1.7cm, minimum width=2.5cm, align=center, drop shadow
     },
     lstm/.style={
-        draw, fill=green!10, rectangle, rounded corners, minimum height=1.5cm, minimum width=1.5cm, align=center
+        draw, fill=green!10, rectangle, rounded corners, minimum height=1.7cm, minimum width=1.5cm, align=center
     },
     dense/.style={
         draw, fill=purple!10, trapezium, trapezium left angle=70, trapezium right angle=110, minimum height=1cm, align=center
@@ -40,20 +40,20 @@
     \node[below=0.1cm of flat1, font=\tiny] {Proj.};
 
     % Feature Vector 1
-    \node[tensor, right=0.5cm of flat1, fill=red!10, minimum height=1cm, minimum width=0.3cm] (feat1) {\tiny 256};
+    \node[tensor, right=0.5cm of flat1, fill=red!10, minimum height=1.7cm, minimum width=0.3cm] (feat1) {\tiny 256};
     
     % LSTM Cell 1
     \node[lstm, right=0.8cm of feat1] (lstm1) {\textbf{LSTM}\\ \tiny (2 Layers)};
 
     % --- TIME STEP 2 (Dots) ---
-    \node[below=1.5cm of in1] (dots_in) {$\vdots$};
-    \node[below=1.5cm of cnn1] (dots_cnn) {$\vdots$};
-    \node[below=1.5cm of feat1] (dots_feat) {$\vdots$};
+    \node[below=0.3cm of in1] (dots_in) {$\vdots$};
+    \node[below=0.3cm of cnn1] (dots_cnn) {$\vdots$};
+    \node[below=0.3cm of feat1] (dots_feat) {$\vdots$};
     % \node[below=1.5cm of lstm1] (dots_lstm) {$\vdots$};
 
     % --- TIME STEP T (Last) ---
     % Input Frame T
-    \node[tensor, fill=gray!20, label=above:{$x_{t_T}$}, below=3cm of in1] (inT) {\tiny $1\times12\times12$};
+    \node[tensor, fill=gray!20, label=above:{$x_{t_T}$}, below=1.5cm of in1] (inT) {\tiny $1\times12\times12$};
     
     % CNN Block T
     \node[convblock, right=0.8cm of inT, align=left] (cnnT) {
