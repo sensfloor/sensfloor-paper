@@ -29,36 +29,79 @@ Finally, the combined data of pose and position is streamed to a frontend applic
 % - Creating labels for training using Mediapipe -> Output: Ground truth joint positions in coordinate system with hip as origin
 \subsection{Data collection}
 The model developed in this paper takes SensFloor signals as input to predict the 3D joint coordinates of a person walking on the floor.
-To train and evaluate such a model, we recorded in two sessions a total of eight \todo{Look up actual duration} hours of synchronized SensFloor signals and video from three participants.
-To synchronize the data, we mapped the SensFloor signals to the corresponding video frame number at their time of occurrence.
-In post-processing, we used MediaPipe \todo{cite} to extract 3D pose estimates from the video to serve as training targets.
+To train and evaluate such a model, we recorded in two sessions a total of eight \todo{Look up actual duration} hours of synchronized SensFloor signals and video from three participants. \todo{mention 15fps? 10Hz?}
+To synchronize the data, we mapped the SensFloor signals to the corresponding video frame number at their time of occurrence. 
+In post-processing, we used MediaPipe \todo{cite} to extract 3D pose estimates from the video to serve as training targets. \todo{training targets or reference labels?}
 It is important to mention here that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips.
 This allows us to decompose the paper's problem into the previously mentioned two components of pose estimation relative to the hip and localization on the whole floor.
 
 
+\subsection{Training Data preprocessing}
+% - Unique frames
+Before giving the data to our model we preprocess it in several ways. First we filter signals that are beneath a threshold and likely correspond to noise from the floor. We defined the threshold to be 140, but it can vary by the floor setup. \todo{equation format?}. Then we filter labels that do not contain SensFloor signals and vice versa ending up with a set of frames that contain both significant signals as input and a reference label. 
+% - Data split
+Next, we take the first 80\% of this list as the training data, 10\% as validation and 10\% as test. When we load one item of this set we create a ROI history, which is a sequence of areas of the floor. We defined the sequence length as 50 and the ROI is a $4\times4$ grid of the floor with the signal values for this frame.
+\todo{Patch signals should be explained} % The patches send signals when the capacitance changes, so even if there are no signals for a frame, there is still a state
+% - Data (roi, history)
+The history is craeted by going back 50 frames and for each frame taking the signals it received or no signals if no signals were in this frame.
+\todo{explain roi gird not triangular} % maybe that's not so important but if we have space
+% - normalize: 0-1 and not -1 to 1 because most will be 0. e.g. 127
+All signals are normalized between 0 and 1
+% - Transformation (rotate, normalize, remove noise)
+% - Joints excluded
+% - frames containing message
+
+
+\subsection{Training Setup}
 % Describe training of the model
 % - Model architecture: Supervised regression model
-% - Data (roi, history)
-% - Data split
 % - Loss (link loss, MSE)
 % - Training setup (config) and how we determined the hyperparameters -> Mention what joints we predict here (or in data collection)
 % - Metrics (PCK, MJPE)
 % - What is the output?
-\subsection{Training Setup}
-We used a CNN-LSTM architecture for training our model. It is based on the model from \todo{cite correctly}.
-Instead of rotating the step, we use a CNN to account for the Translation invariance.
-Figure STH shows the full architecture. 
-Instead of giving the model all signals of the floor, we construct a Region of Interest (ROI)
-which is a part of the floor containing the most signals in a defined sequence.
-A sequence is a collection of frames. For each frame we have a state of the floor with certain signals.
-Our model receives the signals in the ROI frame by frame and produces a vector with continuous values as logits.
-These logits are given into our Loss function which can be mathematically described in the following
-\todo{replace with correct equation}
-We substract the predictions from the reference labels, square and multiply the weights of the landmarks.
-The link loss is identical to the one in \todo{replace with correct cite}
+We used a LSTM architecture for training our model. It is based on the model from \cite{hoffmann_gait2021}. We instead use a CNN to account for the Translation invariance. The full architecture is in figure \ref{fig:model-architecture}. 
+Instead of giving the model all signals of the floor, we construct a Region of Interest (ROI) which is a part of the floor containing the most signals in a defined sequence. A sequence is a collection of frames. For each frame we have a state of the floor. The state is constantly updated by the signals received from the patches. The CNN-LSTM model receives the signals in the ROI frame by frame and produces a vector with continuous values, the coordinate predictions for each joint. These coordinates are given into the Loss function. The total loss is defined as
+
+\begin{equation}
+    L_{total} = L_{\text{WMSE}} + \lambda \cdot L_{\text{link}},
+    \label{eq:total_loss}
+\end{equation}
+where $\lambda$ is a fixed scalar for $L_{\text{link}}$. We set $\lambda$ to $0.1$. The $L_{\text{WMSE}}$ calculates the squared difference between predictions and the reference labels, the joint coordinates, weighted by specific landmark importance and is defined as
+
+\begin{equation}
+L_{\text{WMSE}} = \frac{1}{B \cdot J \cdot 3} \sum_{i=1}^{B} \sum_{j=1}^{J}\sum_{k=1}^{3} w_j (\hat{y}_{i,j,k} - y_{i,j,k})^2,
+\end{equation} 
+
+where $B$ is the batch size, $J$ the number of joints, $k$ x,y and z coordinates of each joint, $\hat{y}_{i,j,k}$ the model's predictions and $y_{i,j,k}$ the reference labels. 
+Furthermore we used the link loss from \cite{Luo_intel2021} defined as 
+
+\begin{equation}
+L_{\text{link}}(d) =
+\begin{cases}
+k_{\text{min}} - d, & \text{if } d < k_{\text{min}} \\
+d - k_{\text{max}}, & \text{if } d > k_{\text{max}} \\
+0, & \text{otherwise},
+\end{cases}
+\end{equation} 
+
+where $d$ is the length of a link (e.g. shoulder width) and $k_{\text{min}}$ and $k_{\text{max}}$ are the top and bottom $0.03$ percentiles of the link lengths in the training set.
+
+\todo{expl. Mediapipe inconsistency?}
+% like where do we explain that we excluded the feet joints that were very inconsistent in length
+
+
+
 We assume an upright position, this is why the upper body and the head will only rotate and the focus is more on the knee and feet
 Mediapipe extracts 33 Joints, we only used 13, excluding the fingers, face expression, heels and foot index.
 For each epoch we calculate the following metrics: Mean joint position error (MJPE), percentage correct keypoits (PCK) with a 5 and 10 threshold
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics{model-architecture.pdf}
+    \caption{caption model architecture}
+    \Description{description model architecture}
+    \label{fig:model-architecture}
+\end{figure}
 
 
 We assume only one person is walking on the floor
