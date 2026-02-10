@@ -26,7 +26,7 @@ Finally, the combined data of pose and position is streamed to a frontend applic
 % - Who did we collect?
 % - How does the recording setup look like?
 % - Collect video and sensfloor at the same time -> Output: mp4 and csv
-% - Creating labels for training using Mediapipe -> Output: Ground truth joint positions in coordinate system with hip as origin
+% - Creating labels for training using MediaPipe -> Output: Ground truth joint positions in coordinate system with hip as origin
 \subsection{Data collection}
 The model developed in this paper takes SensFloor signals as input to predict the 3D joint coordinates of a person walking on the floor.
 To train and evaluate such a model, we recorded in two sessions a total of eight \todo{Look up actual duration} hours of synchronized SensFloor signals and video from three participants. \todo{mention 15fps? 10Hz?}
@@ -38,19 +38,19 @@ This allows us to decompose the paper's problem into the previously mentioned tw
 
 \subsection{Training Data preprocessing}
 % - Unique frames
-Before giving the data to our model we preprocess it in several ways. First we filter signals that are beneath a threshold and likely correspond to noise from the floor. We defined the threshold to be 140, but it can vary by the floor setup. \todo{equation format?}. Then we filter labels that do not contain SensFloor signals and vice versa ending up with a set of frames that contain both significant signals as input and a reference label. 
+Before giving the data to our model we preprocess it in several ways. First we filter signals that are beneath a threshold and likely correspond to noise from the floor. We defined the threshold to be $\tau = 140$, but it can vary by the floor setup. \todo{equation format?}. Then we filter labels that do not contain SensFloor signals and vice versa ending up with a set of frames that contain both significant signals as input and a reference label. 
 % - Data split
-Next, we take the first 80\% of this list as the training data, 10\% as validation and 10\% as test. When we load one item of this set we create a ROI history, which is a sequence of areas of the floor. We defined the sequence length as 50 and the ROI is a $4\times4$ grid of the floor with the signal values for this frame.
+Next, we take the first $80\%$ of this list as the training data, $10\%$ as validation and $10\%$ as test. When we load one item of this set we create a ROI history, which is a sequence of areas of the floor. We defined the sequence length as 50 and the ROI is a $4\times4$ grid of the floor with the signal values for this frame.
 \todo{Patch signals should be explained} % The patches send signals when the capacitance changes, so even if there are no signals for a frame, there is still a state
 % - Data (roi, history)
 The history is craeted by going back 50 frames and for each frame taking the signals it received or no signals if no signals were in this frame.
 \todo{explain roi gird not triangular} % maybe that's not so important but if we have space
 % - normalize: 0-1 and not -1 to 1 because most will be 0. e.g. 127
-All signals are normalized between 0 and 1
-% - Transformation (rotate, normalize, remove noise)
+All signals are normalized to the range $[0, 1]$ (127 will be 0 and 255 will be 1).
+% - Transformation (rotate)
+Given the translation invariance of the data, we rotate the ROI history by ${0, 90, 180, 270}$ randomly for a more robust training.
 % - Joints excluded
-% - frames containing message
-
+Finally we use 13 of the 33 joints given by MediaPipe, excluding eyes, ears, mouth and fingers because they are irrevelant for our goal. Additionally we exclude the Foot heel and index, because MediaPipe predicted the foot unreliably to lengths of 3~cm to 18~cm.
 
 \subsection{Training Setup}
 % Describe training of the model
@@ -86,13 +86,13 @@ d - k_{\text{max}}, & \text{if } d > k_{\text{max}} \\
 
 where $d$ is the length of a link (e.g. shoulder width) and $k_{\text{min}}$ and $k_{\text{max}}$ are the top and bottom $0.03$ percentiles of the link lengths in the training set.
 
-\todo{expl. Mediapipe inconsistency?}
+\todo{expl. MediaPipe inconsistency?}
 % like where do we explain that we excluded the feet joints that were very inconsistent in length
 
 
 
 We assume an upright position, this is why the upper body and the head will only rotate and the focus is more on the knee and feet
-Mediapipe extracts 33 Joints, we only used 13, excluding the fingers, face expression, heels and foot index.
+MediaPipe extracts 33 Joints, we only used 13, excluding the fingers, face expression, heels and foot index.
 For each epoch we calculate the following metrics: Mean joint position error (MJPE), percentage correct keypoits (PCK) with a 5 and 10 threshold
 
 \begin{figure}[htbp]
