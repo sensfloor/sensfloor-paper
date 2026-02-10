@@ -68,6 +68,30 @@ We assume only one person is walking on the floor
 % - Kalman filter approach
 % - Component values
 % - What is the output?
+\subsection{Localization}
+To integrate the local pose estimate from the model into the global coordinate system of the floor, we developed a pipeline that tracks the subject's hip position relative to the SensFloor. We do this by extracting a raw pose estimate through clustering the measured sensor activations and applying a Kalman filter to smoothen the trajectory.
+
+We identify the subject's contact points with the floor by grouping adjacent active sensor fields into clusters. The hip position is then calculated the following way: during a step, when both feet touch the ground, two clusters can be measured. In this case, we define the hip position as the midpoint between the centroids of the two clusters. If only one cluster is detected, meaning one foot is off the ground or both feet are close together, we assume the hip is located directly above that single centroid. This logic is illustrated in Figure \ref{fig:signal-clustering} and allows us to extract the hip position from the received signals.
+
+\todo{Is this diagram valuable enough for the space?}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\columnwidth]{img/signal-clustering.pdf}
+    \caption{Calculation of the global position --- This visualization shows two clusters of SensFloor activations. For both the centroid calculated. The final position is then determined by taking the mean position between both clusters.}
+    \Description{}
+    \label{fig:signal-clustering}
+\end{figure}
+
+Because the raw position estimates are noisy and lead to jittery, unnatural movement in the visualization, we apply a Kalman Filter to ensure a smooth trajectory. Similar to \cite[255 ff]{}, the filter's state vector is defined as $\mathbf{x} = [x, y, \dot{x}, \dot{y}]^T$, where $x$ and $y$ are the position coordinates and $\dot{x}$ and $\dot{y}$ the corresponding velocities. Due to the absence of ground-truth tracking data for exact calibration, we tuned the filter's noise parameters empirically until the trajectory visually matched the subject's actual movement in the recorded videos. A comparison of the Kalman-filtered position estimates versus the raw positions is shown in Figure \ref{fig:kalman-filter-effect}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{img/kalman-filter-effect.pdf}
+    \caption{Effect of the Kalman filter --- The left part of the image shows the raw signals that we obtain from the clustering of the activated fields from the walk of a person on the floor. On the right side are the signals processed by the Kalman filter which show a much smoother and realistic trajectory.}
+    \Description{}
+    \label{fig:kalman-filter-effect}
+\end{figure}
+
 
 % Describe how localization and pose prediction are combined -> Summary that connects training and localization outputs
 
