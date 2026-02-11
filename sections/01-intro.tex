@@ -2,28 +2,32 @@
 \label{sec:introduction}
 
 
-With the ageing of the population elderly care is becoming more important than ever. However,the amount of missing workforces is increasing and is expected to be between 280 000 and 690000 in 2049 in Germany [1]. 
+With the ageing of the population elderly care is becoming more important than ever. However, the amount of missing workforces is increasing and is expected to be between 280 000 and 690 000 in 2049 in Germany [1]. 
 Therefore, the demand for AI-based technologies that support caregivers by automating monitoring tasks is growing, as they help improve patient safety even with limited personnel.
 
 As monitoring patients for 24 hours continuously is particularly difficult with a limited workforce, research on estimating human movement and posture has been actively pursued.
 
 In recent years, camera-based approaches for human pose estimation have been widely studied. However, such methods raise concerns regarding privacy and are sensitive to environmental factors such as occlusions and camera placement. 
 Therefore, careful consideration is required before introducing these technologies in care facilities. To enable the practical implementation of automation in real care environments, it is necessary to explore alternative methods that can monitor patients while preserving privacy and mitigating occlusion issues. 
+\todo{compress} % compress the paragraphs until here in like 2-3 sentences
 
-Considering these concerns, one promising alternative for automating tasks in the real care-giving is floor-based sensing technology. In this study, we focus on Sensloor as an example of a floor-based sensing system.
-SensFloor is primarily used in elderly care, as it provides a less intrusive form of monitoring compared to camera-based sensors. It is a capacitive sensing floor composed of rectangular patches, each containing eight triangular sensor fields. Each field registers changes in capacitance and outputs a signal between 127 and 255, depending on the magnitude of the detected change. Since the human body contains a large amount of water, walking over increases the change in capacitance, and SensFloor uses it to detect human movement. 
+Considering these concerns, one promising alternative for automating tasks in the real care-giving is floor-based sensing technology. In this study, we focus on SensFloor as an example of a floor-based sensing system.
+SensFloor is primarily used in elderly care, as it provides a less intrusive form of monitoring compared to camera-based sensors. It is a capacitive sensing floor composed of rectangular patches, each containing eight triangular sensor fields \todo{Make definition of terms "patch" and "field" more obvious}. Each field registers changes in capacitance and outputs a signal between 127 and 255 sampled at 10~Hz, depending on the magnitude of the detected change. Since the human body contains a large amount of water, walking over changes the capacitance, which the SensFloor uses it to detect human movement.    
 
-Recently, various floor-based sensing approaches have been explored for human movement analysis. Several studies have estimated human posture or movement patterns using foot pressure-based sensors with neural network models, including intelligent carpets [1] and pressure-sensing insoles [2]. However, pressure-based systems capture richer information about foot–floor interactions than capacitive floor sensors. Moreover, existing studies using capacitive sensor floors [3] mainly focus on recognizing gait patterns or walking conditions, rather than estimating full-body 3D human poses. Therefore, while prior work demonstrates the potential of floor-based sensing for human movement analysis, the feasibility of estimating full-body 3D walking poses from low-resolution capacitive floor sensor signals remains largely unexplored.
+Recently, various floor-based sensing approaches have been explored for human movement analysis. Several studies have estimated human posture or movement patterns using foot pressure-based sensors with neural network models, including intelligent carpets [1] and pressure-sensing insoles [2]. However, the pressure-based systems used in these studies capture richer information about foot–floor interactions than SensFloor \todo{Before was too general}. Moreover, existing studies using SensFloor [3] focus on recognizing gait patterns or walking conditions or estimating the age, rather than estimating full-body 3D human poses. \todo{Human tracking paper, shortly mention it exists}Therefore, while prior work demonstrates the potential of floor-based sensing for human movement analysis, the feasibility of estimating full-body 3D walking poses from low-resolution capacitive floor sensor signals remains largely unexplored. 
+
+This study aims to answer the research questions of whether it is possible to use the SensFloor signals to estimate 3D human walking poses and how accurate they are.
+For this purpose we created a labeled dataset, trained a neural network that estimates poses, tuned a Kalman filter to smooth the extracted positions of the estimated poses on the floor and implemented a frontend that visualizes them. \todo{Mention assumption of only one person walking on the floor}
+%For this purpose we created a labeled dataset of people walking on a SensFloor and trained a model on that, which is the core part of a pipeline to visualize people walking on a SensFloor. 
 
 
-In this study,  we investigated the feasibility and accuracy of estimating human 3D walking poses from low-resolution SensFloor signals using a supervised neural network.
- we construct a supervised dataset by synchronizing SensFloor signals with video data,
-from which 3D human poses are extracted using MediaPipe and used as ground-truth labels. With this dataset, we train a supervised LSTM network to estimate 3D human poses
-solely from SensFloor signals. To evaluate the performance of our model,  the predicted poses are compared with the ground-truth poses, and compute the error of sum of joints . 
-
-The results show that the accuracy of predicted poses achieved  ~%. Furthermore, a Kalman Filter was applied to stabilize the noisy SensFloor measurement and estimate the person’s position on the floor smoothly. 
-
- This study demonstrates the feasibility of estimating human poses using SensFloor without relying on cameras  and provides the proof of concept for the practical human activity monitoring using SensFloor. 
+% We construct a supervised dataset by synchronizing SensFloor signals with video data,
+% from which 3D human poses are extracted using MediaPipe and used as ground-truth targets. With this dataset, we train a supervised LSTM network to estimate 3D human poses
+% solely from SensFloor signals. To evaluate the performance of our model, the predicted poses are compared with the ground-truth poses, and compute the error of sum of joints . %ground-truth
+% 
+% The results show that the accuracy of predicted poses achieved  ~\%. Furthermore, a Kalman Filter was applied to stabilize the noisy SensFloor measurement and estimate the person’s position on the floor smoothly. 
+% 
+%  This study demonstrates the feasibility of estimating human poses using SensFloor without relying on cameras  and provides the proof of concept for the practical human activity monitoring using SensFloor. 
 
 
 

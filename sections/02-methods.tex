@@ -1,19 +1,18 @@
 \section{Methods}
 \label{sec:methods}
 % General overview of how to solve the problem (localization and pose prediction)
-The final goal of this project is to design a system that reads SensFloor signals, processes them, and visualizes the person's gait within a virtual simulation.
-To achieve this goal, we split up the problem into two components: pose estimation and localization. 
-The process of both components is illustrated in figure \ref{fig:methods-overview}.
+To achieve this goal of estimating poses using a SensFloor, we split up the problem into two tasks, that are illustrated in Figure \ref{fig:methods-overview}: pose estimation and localization.
+\todo{Rephrase}
+Pose estimation estimates the person's joint coordinates in a local coordinate system.
+For the pose estimation component, we implemented a supervised fine-tuning pipeline. For that we collected reference pose estimates from a MediaPipe to serve as targets.
+Using these targets, we trained a Long Short-Term Memory (LSTM) to predict human poses based on SensFloor activations within an extracted Region of Interest (ROI).
+
+To position the local pose estimate in the global coordinate system of the floor we extract positions using a clustering approach and smooth the resulting positions using a Kalman filter.
+Finally, the combined data of pose and position is streamed to a frontend application for real-time visualization.
+
 By separating these tasks, the system is able to use a small localized active area of the floor for pose estimation. 
 Afterward this pose is mapped across the global floor coordinates. This enables the system to be ported to various floors of different dimensions.
 
-For the pose estimation component, we implemented a supervised fine-tuning pipeline. For that we collected reference pose estimates from a MediaPipe to serve as labels.
-Using these labels, we trained a Long Short-Term Memory (LSTM) to predict human poses based on SensFloor activations within an extracted Region of Interest (ROI).
-To localize the estimated pose, a Kalman Filter processes the noisy sensor signals to determine the person's global coordinates.
-Finally, the combined data of pose and position is streamed to a frontend application for real-time visualization.
-
-
-\cite{bowman:reasoning} % File only compiles when at least one ref is provided
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\columnwidth]{img/methods-overview.pdf}
@@ -26,61 +25,70 @@ Finally, the combined data of pose and position is streamed to a frontend applic
 % - Who did we collect?
 % - How does the recording setup look like?
 % - Collect video and sensfloor at the same time -> Output: mp4 and csv
-% - Creating labels for training using MediaPipe -> Output: Ground truth joint positions in coordinate system with hip as origin
+% - Creating targets for training using MediaPipe -> Output: Ground truth joint positions in coordinate system with hip as origin
 \subsection{Data collection}
+\todo{find better transition}
 The model developed in this paper takes SensFloor signals as input to predict the 3D joint coordinates of a person walking on the floor.
-To train and evaluate such a model, we recorded in two sessions a total of eight \todo{Look up actual duration} hours of synchronized SensFloor signals and video from three participants. \todo{mention 15fps? 10Hz?}
+To train and evaluate such a model, we recorded in two sessions a total of eight \todo{Look up actual duration} hours of synchronized SensFloor signals and video at 15~FPS from three participants.
+In addition to this, there are further short recordings of three other people that we used for testing.
 To synchronize the data, we mapped the SensFloor signals to the corresponding video frame number at their time of occurrence. 
-In post-processing, we used MediaPipe \todo{cite} to extract 3D pose estimates from the video to serve as training targets. \todo{training targets or reference labels?}
+In post-processing, we used MediaPipe \todo{cite} to extract 3D pose estimates from the video to serve as training targets.
 It is important to mention here that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips.
 This allows us to decompose the paper's problem into the previously mentioned two components of pose estimation relative to the hip and localization on the whole floor.
 
-
 \subsection{Training Data preprocessing}
 % - Unique frames
-Before giving the data to our model we preprocess it in several ways. First we filter signals that are beneath a threshold and likely correspond to noise from the floor. We defined the threshold to be $\tau = 140$, but it can vary by the floor setup. \todo{equation format?}. Then we filter labels that do not contain SensFloor signals and vice versa ending up with a set of frames that contain both significant signals as input and a reference label. 
+Before giving the data to our model we preprocess it in several ways. First we filter signals that are beneath a threshold and likely correspond to noise from the floor. We defined the threshold to be $\tau = 140$, but it could vary depending on the floor setup and its surface material. Then we select the frames, at which a significant SensFloor signal was measured and assign them the pose of that frame, ending up with a dataset containing both significant signals as input and a pose as the target.
 % - Data split
-Next, we take the first $80\%$ of this list as the training data, $10\%$ as validation and $10\%$ as test. When we load one item of this set we create a ROI history, which is a sequence of areas of the floor. We defined the sequence length as 50 and the ROI is a $4\times4$ grid of the floor with the signal values for this frame.
-\todo{Patch signals should be explained} % The patches send signals when the capacitance changes, so even if there are no signals for a frame, there is still a state
+Next, we split the dataset sequence-wise with $80\%$ for training, $10\%$ for validating and $10\%$ for testing. When we load one item of this set we create a ROI history, which is a temporal sequence of areas of highest activation. We defined the length of the history as 50 and the ROI is a $4\times4$ grid of the floor with the signal values for this frame. \
+\todo{explain roi gird not triangular and use image and create better image} % maybe that's not so important but if we have space
 % - Data (roi, history)
-The history is craeted by going back 50 frames and for each frame taking the signals it received or no signals if no signals were in this frame.
-\todo{explain roi gird not triangular} % maybe that's not so important but if we have space
+The history is created by going back 50 frames and for each frame taking the signals it received or no signals if no signals were in this frame.
 % - normalize: 0-1 and not -1 to 1 because most will be 0. e.g. 127
-All signals are normalized to the range $[0, 1]$ (127 will be 0 and 255 will be 1).
+All signals are normalized to the range $[0, 1]$, where values of 127 will be 0 and values of 255 will be 1.
 % - Transformation (rotate)
-Given the translation invariance of the data, we rotate the ROI history by ${0, 90, 180, 270}$ randomly for a more robust training.
+Because the ROI is independent in the rest of the floor, we randomly rotate full ROI histories by $\{0, 90, 180, 270\}$ degrees for a more robust training.
 % - Joints excluded
-Finally we use 13 of the 33 joints given by MediaPipe, excluding eyes, ears, mouth and fingers because they are irrevelant for our goal. Additionally we exclude the Foot heel and index, because MediaPipe predicted the foot unreliably to lengths of 3~cm to 18~cm.
+Finally, we use 13 of the 33 joints given by MediaPipe, excluding eyes, ears, mouth and fingers because they are irrelevant for our goal. Additionally, we exclude the foot heel and foot index, because when analyzing the data we found that MediaPipe predicted these bones unreliably to lengths of 3 to 18~cm.
 
 \begin{figure}
     \centering
     \includegraphics[scale=0.75]{img/ROI-visualization.png}
     \caption{Example of one ROI in the sequence given to the model. The highlighted rectangle is the area of the ROI and the signals of the floor are in blue, showing the step of a person}
+    \Description{}
     \label{fig:roi}
 \end{figure}
 
-\subsection{Training Setup}
+\subsection{Pose estimation model}
 % Describe training of the model
 % - Model architecture: Supervised regression model
 % - Loss (link loss, MSE)
 % - Training setup (config) and how we determined the hyperparameters -> Mention what joints we predict here (or in data collection)
 % - Metrics (PCK, MJPE)
 % - What is the output?
-We used a LSTM architecture for training our model. It is based on the model from \cite{hoffmann2021detectingwalkingchallenges}. We instead use a CNN to account for the Translation invariance. The full architecture is in figure \ref{fig:model-architecture}. 
-Instead of giving the model all signals of the floor, we construct a Region of Interest (ROI) which is a part of the floor containing the most signals in a defined sequence. A sequence is a collection of frames. For each frame we have a state of the floor. The state is constantly updated by the signals received from the patches. The CNN-LSTM model receives the signals in the ROI frame by frame and produces a vector with continuous values, the coordinate predictions for each joint. These coordinates are given into the Loss function. The total loss is defined as
+\todo{Mention regression model}
+As our model we chose an LSTM architecture. It is based on the model from \cite{hoffmann2021detectingwalkingchallenges}. We adapted in a way that we added a CNN layer before the LSTM and increased the model size. The model's full architecture and parameters are illustrated in figure \ref{fig:model-architecture}.  
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{img/model-architecture.pdf}
+    \caption{Overview of the model. We used a CNN-LSTM architecture with a self attention layer}
+    \Description{description model architecture}
+    \label{fig:model-architecture}
+\end{figure}
+
+The CNN-LSTM model receives the signals in the ROI frame by frame and produces a vector of continuous values, representing the $x$, $y$ and $z$ coordinate predictions for each joint. These coordinates are given into the loss function. The total loss is defined as
 \begin{equation}
     L_{total} = L_{\text{WMSE}} + \lambda \cdot L_{\text{link}},
     \label{eq:total_loss}
 \end{equation}
-where $\lambda$ is a fixed scalar for $L_{\text{link}}$. We set $\lambda$ to $0.1$. The $L_{\text{WMSE}}$ calculates the squared difference between predictions and the reference labels, the joint coordinates, weighted by specific landmark importance and is defined as
+where $\lambda$ is a fixed scalar for weighting $L_{\text{link}}$. For our training we set $\lambda=0.1$. The $L_{\text{WMSE}}$ (Weighted Mean Squared Error) calculates the squared difference between predictions and the targets, the joint coordinates, weighted by specific landmark importance and is defined as
 
 \begin{equation}
 L_{\text{WMSE}} = \frac{1}{B \cdot J \cdot 3} \sum_{i=1}^{B} \sum_{j=1}^{J}\sum_{k=1}^{3} w_j (\hat{y}_{i,j,k} - y_{i,j,k})^2,
 \end{equation} 
 
-where $B$ is the batch size, $J$ the number of joints, $k$ x,y and z coordinates of each joint, $\hat{y}_{i,j,k}$ the model's predictions and $y_{i,j,k}$ the reference labels. We increased the weight for the knees and feet to 10 compared to 1 for everything else, because they are the most active components in a walking scenario
-Furthermore we used the link loss from \cite{luo2021intelligentcarpetinferring} defined as 
+where $B$ is the batch size, $J$ the number of joints, $k$ indexing the $x$, $y$ and $z$ coordinates of each joint, $\hat{y}_{i,j,k}$ the model's predictions and $y_{i,j,k}$ the targets. We increased the weight for the knees and feet to 5 compared to 1 for all other joints, because they are the most active components in a walking scenario. For each estimated joint-pair we furthermore calculate the Euclidean distance $d$ (e.g. the lower leg length). We use it in the link loss function which we adopted from \cite{luo2021intelligentcarpetinferring} defined as 
 
 \begin{equation}
 L_{\text{link}}(d) =
@@ -91,21 +99,9 @@ d - k_{\text{max}}, & \text{if } d > k_{\text{max}} \\
 \end{cases}
 \end{equation} 
 
-where $d$ is the length of a link (e.g. shoulder width) and $k_{\text{min}}$ and $k_{\text{max}}$ are the top and bottom $0.03$ percentiles of the link lengths in the training set.
-We assume an upright position, this is why the upper body and the head will only rotate and the focus is more on the knee and feet
-MediaPipe extracts 33 Joints, we only used 13, excluding the fingers, face expression, heels and foot index.
-For each epoch we calculate the following metrics: Mean joint position error (MJPE), percentage correct keypoits (PCK) with a 5 and 10 threshold
+where $k_{\text{min}}$ and $k_{\text{max}}$ are the $3^{\text{th}}$ and $97^{\text{th}}$ percentiles of the link lengths in the training set.
+During the training we calculate the following metrics in each epoch: Mean joint position error (MJPE) and percentage correct keypoits (PCK) with a 5 and 10 threshold
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=\columnwidth]{img/model-architecture.pdf}
-    \caption{Overview of the model. We used a CNN-LSTM architecture with a self attention layer}
-    \Description{description model architecture}
-    \label{fig:model-architecture}
-\end{figure}
-
-
-We assume only one person is walking on the floor
 
 % Describe localization
 % - Sensor & clustering of signals
@@ -117,7 +113,7 @@ To integrate the local pose estimate from the model into the global coordinate s
 
 We identify the subject's contact points with the floor by grouping adjacent active sensor fields into clusters. The hip position is then calculated the following way: during a step, when both feet touch the ground, two clusters can be measured. In this case, we define the hip position as the midpoint between the centroids of the two clusters. If only one cluster is detected, meaning one foot is off the ground or both feet are close together, we assume the hip is located directly above that single centroid. This logic is illustrated in Figure \ref{fig:signal-clustering} and allows us to extract the hip position from the received signals.
 
-\todo{Is this diagram valuable enough for the space?}
+\todo{Make horizontal}
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.5\columnwidth]{img/signal-clustering.pdf}
@@ -126,8 +122,9 @@ We identify the subject's contact points with the floor by grouping adjacent act
     \label{fig:signal-clustering}
 \end{figure}
 
-Because the raw position estimates are noisy and lead to jittery, unnatural movement in the visualization, we apply a Kalman Filter to ensure a smooth trajectory. Similar to \cite[255 ff]{rogerr.2024kalmanbayesianfilters}, the filter's state vector is defined as $\mathbf{x} = [x, y, \dot{x}, \dot{y}]^T$, where $x$ and $y$ are the position coordinates and $\dot{x}$ and $\dot{y}$ the corresponding velocities. Due to the absence of ground-truth tracking data for exact calibration, we tuned the filter's noise parameters empirically until the trajectory visually matched the subject's actual movement in the recorded videos. A comparison of the Kalman-filtered position estimates versus the raw positions is shown in Figure \ref{fig:kalman-filter-effect}
+Because the raw position estimates are noisy and lead to erratic, unnatural movement in the visualization, we apply a Kalman Filter to ensure a smooth trajectory. Similar to \cite[255 ff.]{rogerr.2024kalmanbayesianfilters}, the filter's state vector is defined as $\mathbf{x} = [x, y, \dot{x}, \dot{y}]^T$, where $x$ and $y$ are the position coordinates and $\dot{x}$ and $\dot{y}$ the corresponding velocities. Due to the absence of ground-truth tracking data for exact calibration, we tuned the filter's noise parameters empirically until the trajectory visually matched the subject's actual movement in the recorded videos. A comparison of the Kalman-filtered position estimates versus the raw measured positions is shown in Figure \ref{fig:kalman-filter-effect}
 
+\todo{move maybe to results}
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\columnwidth]{img/kalman-filter-effect.pdf}
@@ -137,7 +134,5 @@ Because the raw position estimates are noisy and lead to jittery, unnatural move
 \end{figure}
 
 
-% Describe how localization and pose prediction are combined -> Summary that connects training and localization outputs
-
-% How to visualize floor and predicted pose
-% - Setup for live predictions
+\subsection{Visualization of predicted 3D Pose}
+For visual evaluating and demo-purposes of the pose estimation pipeline, we furthermore implemented a frontend. The estimated pose and its position are streamed to the frontend using a WebSocket. The frontend then visualizes a simulated environment of the floor and the person's pose moving on it.
