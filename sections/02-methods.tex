@@ -66,7 +66,7 @@ Finally we use 13 of the 33 joints given by MediaPipe, excluding eyes, ears, mou
 % - Training setup (config) and how we determined the hyperparameters -> Mention what joints we predict here (or in data collection)
 % - Metrics (PCK, MJPE)
 % - What is the output?
-We used a LSTM architecture for training our model. It is based on the model from \cite{hoffmann_gait2021}. We instead use a CNN to account for the Translation invariance. The full architecture is in figure \ref{fig:model-architecture}. 
+We used a LSTM architecture for training our model. It is based on the model from \cite{hoffmann2021detectingwalkingchallenges}. We instead use a CNN to account for the Translation invariance. The full architecture is in figure \ref{fig:model-architecture}. 
 Instead of giving the model all signals of the floor, we construct a Region of Interest (ROI) which is a part of the floor containing the most signals in a defined sequence. A sequence is a collection of frames. For each frame we have a state of the floor. The state is constantly updated by the signals received from the patches. The CNN-LSTM model receives the signals in the ROI frame by frame and produces a vector with continuous values, the coordinate predictions for each joint. These coordinates are given into the Loss function. The total loss is defined as
 
 \begin{equation}
@@ -80,7 +80,7 @@ L_{\text{WMSE}} = \frac{1}{B \cdot J \cdot 3} \sum_{i=1}^{B} \sum_{j=1}^{J}\sum_
 \end{equation} 
 
 where $B$ is the batch size, $J$ the number of joints, $k$ x,y and z coordinates of each joint, $\hat{y}_{i,j,k}$ the model's predictions and $y_{i,j,k}$ the reference labels. We increased the weight for the knees and feet to 10 compared to 1 for everything else, because they are the most active components in a walking scenario
-Furthermore we used the link loss from \cite{Luo_intel2021} defined as 
+Furthermore we used the link loss from \cite{luo2021intelligentcarpetinferring} defined as 
 
 \begin{equation}
 L_{\text{link}}(d) =
@@ -98,7 +98,7 @@ For each epoch we calculate the following metrics: Mean joint position error (MJ
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[scale=0.75]{img/model-architecture.pdf}
+    \includegraphics[width=\columnwidth]{img/model-architecture.pdf}
     \caption{Overview of the model. We used a CNN-LSTM architecture with a self attention layer}
     \Description{description model architecture}
     \label{fig:model-architecture}
@@ -126,7 +126,7 @@ We identify the subject's contact points with the floor by grouping adjacent act
     \label{fig:signal-clustering}
 \end{figure}
 
-Because the raw position estimates are noisy and lead to jittery, unnatural movement in the visualization, we apply a Kalman Filter to ensure a smooth trajectory. Similar to \cite[255 ff]{}, the filter's state vector is defined as $\mathbf{x} = [x, y, \dot{x}, \dot{y}]^T$, where $x$ and $y$ are the position coordinates and $\dot{x}$ and $\dot{y}$ the corresponding velocities. Due to the absence of ground-truth tracking data for exact calibration, we tuned the filter's noise parameters empirically until the trajectory visually matched the subject's actual movement in the recorded videos. A comparison of the Kalman-filtered position estimates versus the raw positions is shown in Figure \ref{fig:kalman-filter-effect}
+Because the raw position estimates are noisy and lead to jittery, unnatural movement in the visualization, we apply a Kalman Filter to ensure a smooth trajectory. Similar to \cite[255 ff]{rogerr.2024kalmanbayesianfilters}, the filter's state vector is defined as $\mathbf{x} = [x, y, \dot{x}, \dot{y}]^T$, where $x$ and $y$ are the position coordinates and $\dot{x}$ and $\dot{y}$ the corresponding velocities. Due to the absence of ground-truth tracking data for exact calibration, we tuned the filter's noise parameters empirically until the trajectory visually matched the subject's actual movement in the recorded videos. A comparison of the Kalman-filtered position estimates versus the raw positions is shown in Figure \ref{fig:kalman-filter-effect}
 
 \begin{figure}[htbp]
     \centering
