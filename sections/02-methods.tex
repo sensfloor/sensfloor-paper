@@ -52,6 +52,13 @@ Given the translation invariance of the data, we rotate the ROI history by ${0, 
 % - Joints excluded
 Finally we use 13 of the 33 joints given by MediaPipe, excluding eyes, ears, mouth and fingers because they are irrevelant for our goal. Additionally we exclude the Foot heel and index, because MediaPipe predicted the foot unreliably to lengths of 3~cm to 18~cm.
 
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.75]{img/ROI-visualization.png}
+    \caption{Example of one ROI in the sequence given to the model. The highlighted rectangle is the area of the ROI and the signals of the floor are in blue, showing the step of a person}
+    \label{fig:roi}
+\end{figure}
+
 \subsection{Training Setup}
 % Describe training of the model
 % - Model architecture: Supervised regression model
@@ -91,8 +98,8 @@ For each epoch we calculate the following metrics: Mean joint position error (MJ
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics{model-architecture.pdf}
-    \caption{caption model architecture}
+    \includegraphics[scale=0.75]{model-architecture.pdf}
+    \caption{Overview of the model. We used a CNN-LSTM architecture with a self attention layer}
     \Description{description model architecture}
     \label{fig:model-architecture}
 \end{figure}
