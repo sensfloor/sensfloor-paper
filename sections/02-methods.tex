@@ -72,7 +72,7 @@ where $\lambda$ is a fixed scalar for $L_{\text{link}}$. We set $\lambda$ to $0.
 L_{\text{WMSE}} = \frac{1}{B \cdot J \cdot 3} \sum_{i=1}^{B} \sum_{j=1}^{J}\sum_{k=1}^{3} w_j (\hat{y}_{i,j,k} - y_{i,j,k})^2,
 \end{equation} 
 
-where $B$ is the batch size, $J$ the number of joints, $k$ x,y and z coordinates of each joint, $\hat{y}_{i,j,k}$ the model's predictions and $y_{i,j,k}$ the reference labels. 
+where $B$ is the batch size, $J$ the number of joints, $k$ x,y and z coordinates of each joint, $\hat{y}_{i,j,k}$ the model's predictions and $y_{i,j,k}$ the reference labels. We increased the weight for the knees and feet to 10 compared to 1 for everything else, because they are the most active components in a walking scenario
 Furthermore we used the link loss from \cite{Luo_intel2021} defined as 
 
 \begin{equation}
@@ -85,12 +85,6 @@ d - k_{\text{max}}, & \text{if } d > k_{\text{max}} \\
 \end{equation} 
 
 where $d$ is the length of a link (e.g. shoulder width) and $k_{\text{min}}$ and $k_{\text{max}}$ are the top and bottom $0.03$ percentiles of the link lengths in the training set.
-
-\todo{expl. MediaPipe inconsistency?}
-% like where do we explain that we excluded the feet joints that were very inconsistent in length
-
-
-
 We assume an upright position, this is why the upper body and the head will only rotate and the focus is more on the knee and feet
 MediaPipe extracts 33 Joints, we only used 13, excluding the fingers, face expression, heels and foot index.
 For each epoch we calculate the following metrics: Mean joint position error (MJPE), percentage correct keypoits (PCK) with a 5 and 10 threshold
