@@ -32,8 +32,8 @@ For this purpose, we recorded in two sessions a total of eight hours of synchron
 % - Unique frames
 Before giving the data to our model we preprocess it in several ways. First we filter signals that are beneath a threshold and likely correspond to noise from the floor. We defined the threshold to be $\tau = 140$, but it could vary depending on the floor setup and its surface material. Then we select the frames, at which a significant SensFloor signal was measured and assign them the pose of that frame, ending up with a dataset containing both significant signals as input and a pose as the target.
 % - Data split
-Next, we split the dataset sequence-wise with $80\%$ for training, $10\%$ for validating and $10\%$ for testing. When we load one item of this set we create a ROI history, which is a temporal sequence of areas of highest activation. We defined the length of the history as 50 and the ROI is a $4\times4$ grid of the floor with the signal values for this frame. \
-\todo{explain roi gird not triangular and use image and create better image} % maybe that's not so important but if we have space
+Next, we split the dataset sequence-wise with $80\%$ for training, $10\%$ for validating and $10\%$ for testing, ending up with 174,949 poses\todo{check numbering consistent} for training\todo{Datasetlength Train length?}. When we load one item of this set we create a ROI history, which is a temporal sequence of areas of highest activation. We defined the length of the history as 50 and the ROI is a $4\times4$ grid of the floor with the signal values for this frame. This grid is a squared approximation of the triangular SensFloor patches explained in section \ref{sec:introduction}; two fields that form a rectangle are transformed into a $2\times2$ square where the diagonal is the mean value of the fields
+\todo{confirm roi explanation} % maybe that's not so important but if we have space
 % - Data (roi, history)
 The history is created by going back 50 frames and for each frame taking the signals it received or no signals if no signals were in this frame.
 % - normalize: 0-1 and not -1 to 1 because most will be 0. e.g. 127
@@ -59,7 +59,7 @@ Finally, we use 13 of the 33 joints given by MediaPipe, excluding eyes, ears, mo
 % - Metrics (PCK, MJPE)
 % - What is the output?
 \todo{Mention regression model}
-As our model we chose an LSTM architecture. It is based on the model from \cite{hoffmann2021detectingwalkingchallenges}. We adapted in a way that we added a CNN layer before the LSTM and increased the model size. The model's full architecture and parameters are illustrated in figure \ref{fig:model-architecture}.  
+As our model we chose an LSTM architecture. It is based on the model from \cite{hoffmann2021detectingwalkingchallenges}. We adapted in a way that we added a CNN layer before the LSTM and increased size of the model. The model's full architecture and parameters are illustrated in figure \ref{fig:model-architecture}. We trained this model on \todo{24 epochs} with batch size of 32 and AdamW with a learning rate of 0.0001
 \todo{Mention Epoch and such?} % google, find out if it's a standard to do this and also if annex is ok
 
 \begin{figure}[htbp]
@@ -93,8 +93,8 @@ d - k_{\text{max}}, & \text{if } d > k_{\text{max}} \\
 \end{equation} 
 
 where $k_{\text{min}}$ and $k_{\text{max}}$ are the $3^{\text{th}}$ and $97^{\text{th}}$ percentiles of the link lengths in the training set.
-During the training we calculate the following metrics in each epoch: Mean joint position error (MJPE) and percentage correct keypoits (PCK) with a 5 and 10 threshold
-
+During the training we calculate the following metrics in each epoch: Mean Joint Position Error (MJPE) and Percentage Correct Key points (PCK) with a 5 and 10~cm threshold
+\todo{explain the reason for these metrics}
 
 % Describe localization
 % - Sensor & clustering of signals
