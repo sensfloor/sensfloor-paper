@@ -25,14 +25,8 @@ By splitting the problem into these two tasks, the system requires only a small 
 % - Collect video and sensfloor at the same time -> Output: mp4 and csv
 % - Creating targets for training using MediaPipe -> Output: Ground truth joint positions in coordinate system with hip as origin
 \subsection{Data collection}
-\todo{find better transition}
-The model developed in this paper takes SensFloor signals as input to predict the 3D joint coordinates of a person walking on the floor.
-To train and evaluate such a model, we recorded in two sessions a total of eight \todo{Look up actual duration} hours of synchronized SensFloor signals and video at 15~FPS from three participants.
-In addition to this, there are further short recordings of three other people that we used for testing.
-To synchronize the data, we mapped the SensFloor signals to the corresponding video frame number at their time of occurrence. 
-In post-processing, we used MediaPipe \todo{cite} to extract 3D pose estimates from the video to serve as training targets.
-It is important to mention here that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips.
-This allows us to decompose the paper's problem into the previously mentioned two components of pose estimation relative to the hip and localization on the whole floor.
+To enable supervised training of the LSTM model, we collected a dataset of SensFloor signals and corresponding pose targets. 
+For this purpose, we recorded in two sessions a total of eight hours of synchronized SensFloor signals and video at 15~FPS of three participants walking on the floor. Furthermore, we captured some additional short sequences from three further participants that are used for testing only. To synchronize the data, we matched each received SensFloor signal to the video frame number recorded at the same time. To extract the final 3D pose targets from the video feed, we used a MediaPipe pose estimation model.  \todo{cite} It is worth noting that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips. This allows the decomposition of the paper's problem into the previously introduced two tasks of pose estimation relative to the hip and localization on the global floor.
 
 \subsection{Training Data preprocessing}
 % - Unique frames
