@@ -1,22 +1,20 @@
 \section{Methods}
 \label{sec:methods}
 % General overview of how to solve the problem (localization and pose prediction)
-To achieve this goal of estimating poses using a SensFloor, we split up the problem into two tasks, that are illustrated in Figure \ref{fig:methods-overview}: pose estimation and localization.
-\todo{Rephrase}
-Pose estimation estimates the person's joint coordinates in a local coordinate system.
-For the pose estimation component, we implemented a supervised fine-tuning pipeline. For that we collected reference pose estimates from a MediaPipe to serve as targets.
-Using these targets, we trained a Long Short-Term Memory (LSTM) to predict human poses based on SensFloor activations within an extracted Region of Interest (ROI).
+To achieve the goal of estimating poses using a SensFloor and visualizing them, we split up the problem into two tasks, that are illustrated in Figure \ref{fig:methods-overview}: pose estimation and localization.
 
-To position the local pose estimate in the global coordinate system of the floor we extract positions using a clustering approach and smooth the resulting positions using a Kalman filter.
-Finally, the combined data of pose and position is streamed to a frontend application for real-time visualization.
+The first task of pose estimation uses a trained deep-learning model that estimates the person's joint coordinates in a local coordinate system. For that we collected a labeled dataset of SensFloor signals and target poses. Using this dataset, we trained a Long Short-Term Memory (LSTM) model to predict human poses from sensor activations within an extracted Region of Interest (ROI).
 
-By separating these tasks, the system is able to use a small localized active area of the floor for pose estimation. 
-Afterward this pose is mapped across the global floor coordinates. This enables the system to be ported to various floors of different dimensions.
+The second task of localization extracts the global position of the pose on the complete floor by signal clustering and smoothing the resulting position using a Kalman filter.
+
+Finally, the estimated pose and position are combined and visualized in a real-time simulation of the SensFloor environment.
+
+By splitting the problem into these two tasks, the system requires only a small extracted active area of the floor for pose estimation. This enables the system to be ported to other floors of different dimensions.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\columnwidth]{img/methods-overview.pdf}
-    \caption{Overview of the SensFloor-based pose estimation pipeline --- The left branch estimates the pose in a local, position-independent coordinate system, while the right branch localizes the person in global floor coordinates.}
+    \caption{Overview of the SensFloor-based pose estimation pipeline --- The left branch estimates the person's pose in a local, position-independent coordinate system, while the right branch localizes the person globally on the floor.}
     \Description{}
     \label{fig:methods-overview}
 \end{figure}
