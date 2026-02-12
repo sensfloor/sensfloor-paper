@@ -8,12 +8,13 @@ Figure \ref{fig:pose-comparison} illustrates a visual comparison between the est
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\columnwidth]{img/pose_comparison.pdf}
-    \caption{Comparison of a single estimated pose (red) to its ground truth pose (blue) from different perspectives.}
+    \caption{Comparison of a single estimated 3D pose (red) to its corresponding ground truth pose (blue) from four different perspectives.}
     \Description{}
     \label{fig:pose-comparison}
 \end{figure}
 
 \subsection{Metrics}
+
 
 \subsection{Localization and Kalman-Filter Effect}
 In \ref{subsec:localization}, we introduced our approach for extracting information about the person's current global position from the SensFloor activation signals. The left side of Figure \ref{fig:kalman-filter-effect} shows the raw clustering position trajectory we recorded during a test walk. The illustrated trajectory is highly erratic. This instability is caused by two main factors. First, the algorithm creates jumpy in the estimated position as the mean shifts abruptly whenever a foot makes or breaks contact with the floor. Second, the SensFloor fields produce significant background noise, even in areas where no activity takes place. While increasing the noise signal threshold suppresses some of the noise, it is not a universal solution, as signal intensity of people moving on the floor varies depending on the person's footwear. 
@@ -23,10 +24,11 @@ However, applying the Kalman filter largely reduces these issues, as illustrated
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\columnwidth]{img/kalman-filter-effect.pdf}
-    \caption{To-do}
+    \caption{Comparison of raw (left) and filtered (right) localization trajectories. The arrows indicate the direction of the movement.}
     \Description{}
     \label{fig:kalman-filter-effect}
 \end{figure}
+
 
 % - Predicted pose compared to true pose image
 % - Training metrics (boxplot and mention pck) explain tha numbers
