@@ -115,11 +115,10 @@ To integrate the local pose estimate from the model into the global coordinate s
 
 We identify the subject's contact points with the floor by grouping adjacent active sensor fields into clusters. The hip position is then calculated the following way: during a step, when both feet touch the ground, two clusters can be measured. In this case, we define the hip position as the midpoint between the centroids of the two clusters. If only one cluster is detected, meaning one foot is off the ground or both feet are close together, we assume the hip is located directly above that single centroid. This logic is illustrated in Figure \ref{fig:signal-clustering} and allows us to extract the hip position from the received signals.
 
-\todo{Make horizontal}
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.5\columnwidth]{img/signal-clustering.pdf}
-    \caption{Calculation of the global position --- This visualization shows two clusters of SensFloor activations. For both the centroid calculated. The final position is then determined by taking the mean position between both clusters.}
+    \caption{Global position estimation from signals --- Two clusters of SensFloor activations are identified and their centroids (black dots) are computed. The final position is obtained as the midpoint between the two centroids (red cross).}
     \Description{}
     \label{fig:signal-clustering}
 \end{figure}
