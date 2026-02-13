@@ -65,6 +65,7 @@ The CNN encoder has three sequential 2D convolutional layers with $3 \times 3$ k
 
 We trained this model on \todo{24 epochs} with batch size of 32 and AdamW with a learning rate of $1 \times 10^{-4}$ and a weight decay of $1 \times 10^{-2}$
 
+\subsection{Loss function}
 The CNN-LSTM model receives the signals in the ROI frame by frame and produces $N_{out}$ coordinates. These coordinates are given into the loss function. The total loss is defined as
 \begin{equation}
     L_{total} = L_{\text{WMSE}} + \lambda \cdot L_{\text{link}},
