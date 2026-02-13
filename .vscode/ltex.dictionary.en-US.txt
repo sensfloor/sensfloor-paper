@@ -2,3 +2,4 @@ SensFloor
 MediaPipe
 printfolios
 SensFloor-based
+BlazePose

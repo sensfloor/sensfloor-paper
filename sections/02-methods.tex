@@ -26,7 +26,7 @@ By splitting the problem into these two tasks, the system requires only a small 
 % - Creating targets for training using MediaPipe -> Output: Ground truth joint positions in coordinate system with hip as origin
 \subsection{Data collection}
 To enable supervised training of the LSTM model, we collected a dataset of SensFloor signals and corresponding pose targets. 
-For this purpose, we recorded in two sessions a total of eight hours of synchronized SensFloor signals and video at 15~FPS of three participants walking on the floor. Furthermore, we captured some additional short sequences from three further participants that are used for testing only. To synchronize the data, we matched each received SensFloor signal to the video frame number recorded at the same time. To extract the final 3D pose targets from the video feed, we used a MediaPipe pose estimation model.  \todo{cite} It is worth noting that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips. This allows the decomposition of the paper's problem into the previously introduced two tasks of pose estimation relative to the hip and localization on the global floor.
+For this purpose, we recorded in two sessions a total of eight hours of synchronized SensFloor signals and video at 15~FPS of three participants walking on the floor. Furthermore, we captured some additional short sequences from three further participants that are used for testing only. To synchronize the data, we matched each received SensFloor signal to the video frame number recorded at the same time. To extract the final 3D pose targets from the video feed, we used a MediaPipe pose estimation model, which builds upon the BlazePose architecture \cite{bazarevsky2020blazeposeondevicerealtime}. It is worth noting that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips. This allows the decomposition of the paper's problem into the previously introduced two tasks of pose estimation relative to the hip and localization on the global floor.
 
 \subsection{Training Data preprocessing}
 % - Unique frames
@@ -45,7 +45,7 @@ Finally, we use 13 of the 33 joints given by MediaPipe, excluding eyes, ears, mo
 
 \begin{figure}
     \centering
-    \includegraphics[width=\columnwidth]{img/roi-visualization.pdf}
+    \includegraphics[width=\columnwidth]{img/sensfloor-signal.pdf}
     \caption{Visualization of SensFloor signal processing --- To the left the video-frame recorded of the subject walking, in the center the raw recorded signal on the original triangular sensor grid and to the right the corresponding interpolated signal. The red square in both floor visualizations indicates the extracted ROI for this signal.}
     \Description{}
     \label{fig:roi}
