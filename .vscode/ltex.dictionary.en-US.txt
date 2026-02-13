@@ -3,3 +3,6 @@ MediaPipe
 printfolios
 SensFloor-based
 BlazePose
+ReLU
+AdamW
+MPJPE

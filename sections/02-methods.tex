@@ -59,26 +59,26 @@ The final dataset is split sequence-wise with $80\%$ for training (\textasciitil
 % - Metrics (PCK, MJPE)
 % - What is the output?
 \todo{Mention regression model}
-As our model we chose an LSTM architecture which is based on the classification model from \cite{hoffmann2021detectingwalkingchallenges}. The task for the Model is regression this is why we increased the size of the model. Additionally, we added a CNN encoder before the LSTM because with our ROI approach we have translation invariance. This way similar inputs and targets at a shifted location in the ROI will also be learned.
+The model developed in this paper implements an LSTM architecture which is based on the classification model from \cite{hoffmann2021detectingwalkingchallenges}. We adapted the task from classification of walking modes to the regression task of estimating 3D joint coordinates. Furthermore, we added a CNN encoder prior to the LSTM to utilize the 2D spatial data of the SensFloor signals.
 
-The CNN encoder has three sequential 2D convolutional layers with $3 \times 3$ kernels and increasing channel size of 32, 64, and 128. Each convolution is followed by Batch Normalization and ReLU activation, with $2 \times 2$ Max Pooling applied after the second and third layers. The resulting feature maps are flattened and linearly projected to a 256-dimensional embedding passed to the LSTM with a hidden size of 256 and a dropout rate of 0.2. Finally, the regression head processes the last hidden state through a four-layer Multi-Layer Perceptron (MLP) with unit sizes of [256, 256, 128, $N_{out}$] and ReLU non-linearities.
+The CNN encoder consists of three sequential 2D convolutional layers with $3\times3$ kernels, increasing the channel size from 32, 64, to 128. Each convolution is followed by batch normalization and a ReLU activation, with $2\times2$ max pooling applied after the second and third layer. The resulting feature maps are flattened and passed through a linear layer to obtain a 256-dimensional embedding. This embedding is then input to the LSTM with a hidden size of 256, using a dropout of 0.2 during training. Finally, the regression head processes the last hidden state through a four-layer multi-layer perceptron with layer sizes [256, 256, 128, $N_{out}$] and ReLU activations.
+\todo{Last layer probably no ReLU function}
 
-We trained this model on \todo{24 epochs} with batch size of 32 and AdamW with a learning rate of $1 \times 10^{-4}$ and a weight decay of $1 \times 10^{-2}$
+The model was trained for a maximum of 40 epochs using early-stopping and a batch size of 32. Optimization was performed via AdamW with a learning rate of $1\times10^{-4}$ and a weight decay of $1\times10^{-2}$.
+
+To assess the model performance, we utilize two metrics: Mean Per Joint Position Error (MPJPE) and Percentage of Correct Key Points (PCK) \cite[22 f.]{zheng2023deeplearningbasedhuman}. MPJPE quantifies the average Euclidean distance between estimated and target joints, while PCK measures the percentage of estimates whose distance errors fall below a threshold, which we set at 5~cm (PCK@5) and 10~cm (PCK@10).
 
 \subsection{Loss function}
-The CNN-LSTM model receives the signals in the ROI frame by frame and produces $N_{out}$ coordinates. These coordinates are given into the loss function. The total loss is defined as
+The CNN-LSTM model receives the signals in the ROI sequentially and produces $N_{out}$ coordinate estimates. These coordinates are given into the loss function, which is defined as
 \begin{equation}
     L_{total} = L_{\text{WMSE}} + \lambda \cdot L_{\text{link}},
     \label{eq:total_loss}
 \end{equation}
-where $\lambda$ is a fixed scalar for weighting $L_{\text{link}}$. For our training we set $\lambda=0.1$. The $L_{\text{WMSE}}$ (Weighted Mean Squared Error) calculates the squared difference between predictions and the targets, the joint coordinates, weighted by specific landmark importance and is defined as
-
+where $\lambda$ is a fixed scalar for weighting $L_{\text{link}}$. For training the model we set $\lambda=0.1$. The $L_{\text{WMSE}}$ (weighted mean squared error) calculates the squared difference between the estimated joint coordinates and their target values, weighted by specific landmark importance and is defined as
 \begin{equation}
 L_{\text{WMSE}} = \frac{1}{B \cdot J \cdot 3} \sum_{i=1}^{B} \sum_{j=1}^{J}\sum_{k=1}^{3} w_j (\hat{y}_{i,j,k} - y_{i,j,k})^2,
 \end{equation} 
-
-where $B$ is the batch size, $J$ the number of joints, $k$ indexing the $x$, $y$ and $z$ coordinates of each joint, $\hat{y}_{i,j,k}$ the model's predictions and $y_{i,j,k}$ the targets. We increased the weight for the knees and feet to 5 compared to 1 for all other joints, because they are the most active components in a walking scenario. For each estimated joint-pair we furthermore calculate the Euclidean distance $d$ (e.g. the lower leg length). We use it in the link loss function which we adopted from \cite{luo2021intelligentcarpetinferring} defined as 
-
+where $B$ is the batch size, $J$ the number of joints, $k$ indexes the $x$, $y$ and $z$ coordinates of each joint, $\hat{y}_{i,j,k}$ the model's predictions and $y_{i,j,k}$ the targets. We increased the weight for the knees and feet to 5 compared to 1 for all other joints, because they are the most active components in a walking scenario. For each estimated joint-pair, we furthermore calculate the Euclidean distance $d$, namely the bone length (e.g. of the lower leg) and use these values in the link loss function which we adopted from \cite{luo2021intelligentcarpetinferring}. It is defined as 
 \begin{equation}
 L_{\text{link}}(d) =
 \begin{cases}
@@ -87,10 +87,7 @@ d - k_{\text{max}}, & \text{if } d > k_{\text{max}} \\
 0, & \text{otherwise},
 \end{cases}
 \end{equation} 
-
-where $k_{\text{min}}$ and $k_{\text{max}}$ are the $3^{\text{th}}$ and $97^{\text{th}}$ percentiles of the link lengths in the training set.
-During the training we calculate the following metrics in each epoch: Mean Joint Position Error (MJPE) and Percentage Correct Key points (PCK) with a 5 and 10~cm threshold
-\todo{explain the reason for these metrics}
+where $k_{\text{min}}$ and $k_{\text{max}}$ are the $3^{\text{th}}$ and $97^{\text{th}}$ percentiles of the link lengths in the training set. The link loss is employed to enforce anatomical consistency and maintain correct proportions of body part lengths.
 
 % Describe localization
 % - Sensor & clustering of signals
