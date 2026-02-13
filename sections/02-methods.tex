@@ -1,7 +1,14 @@
 \section{Methods}
 \label{sec:methods}
 % General overview of how to solve the problem (localization and pose prediction)
-To achieve the goal of estimating poses using a SensFloor and visualizing them, we split up the problem into two tasks, that are illustrated in Figure \ref{fig:methods-overview}: pose estimation and localization.
+To achieve the goal of estimating poses using a SensFloor and visualizing them, we split up the problem into two tasks: pose estimation and localization, which are illustrated in Figure \ref{fig:methods-overview}.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{img/methods-overview.pdf}
+    \caption{Overview of the SensFloor-based pose estimation pipeline --- The left branch estimates the person's pose in a local, position-independent coordinate system, while the right branch localizes the person globally on the floor.}
+    \Description{}
+    \label{fig:methods-overview}
+\end{figure}
 
 The first task of pose estimation uses a trained deep-learning model that estimates the person's joint coordinates in a local coordinate system. For that we collected a labeled dataset of SensFloor signals and target poses. Using this dataset, we trained a Long Short-Term Memory (LSTM) model to predict human poses from sensor activations within an extracted Region of Interest (ROI).
 
@@ -11,13 +18,6 @@ Finally, the estimated pose and position are combined and visualized in a real-t
 
 By splitting the problem into these two tasks, the system requires only a small extracted active area of the floor for pose estimation. This enables the system to be ported to other floors of different dimensions.
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=\columnwidth]{img/methods-overview.pdf}
-    \caption{Overview of the SensFloor-based pose estimation pipeline --- The left branch estimates the person's pose in a local, position-independent coordinate system, while the right branch localizes the person globally on the floor.}
-    \Description{}
-    \label{fig:methods-overview}
-\end{figure}
 
 % Data collection (important: mention how our data looks like)
 % - Who did we collect?
@@ -26,7 +26,7 @@ By splitting the problem into these two tasks, the system requires only a small 
 % - Creating targets for training using MediaPipe -> Output: Ground truth joint positions in coordinate system with hip as origin
 \subsection{Data Collection}
 To enable supervised training of the LSTM model, we collected a dataset of SensFloor signals and corresponding pose targets. 
-For this purpose, we recorded in two sessions a total of eight hours of synchronized SensFloor signals and video at 15~FPS of three participants walking on the floor. Furthermore, we captured some additional short sequences from three further participants that are used for testing only. To synchronize the data, we matched each received SensFloor signal to the video frame number recorded at the same time. To extract the final 3D pose targets from the video feed, we used a MediaPipe pose estimation model, which builds upon the BlazePose architecture \cite{bazarevsky2020blazeposeondevicerealtime}. It is worth noting that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips. This allows the decomposition of the paper's problem into the previously introduced two tasks of pose estimation relative to the hip and localization on the global floor.
+Over two sessions, we recorded a total of eight hours of synchronized SensFloor signals and video footage at 15~FPS of three participants walking on the floor. Moreover, we captured some short sequences from three additional participants that were used to assess the model further. To synchronize the data, we matched each received SensFloor signal to the video frame number recorded at the same time. To extract the final 3D pose targets from the video feed, we used a MediaPipe pose estimation model, which builds upon the BlazePose architecture \cite{bazarevsky2020blazeposeondevicerealtime}. It is worth noting that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips. This allows the decomposition of the paper's problem into the previously introduced two tasks of pose estimation relative to the hip and localization on the global floor.
 
 \subsection{Data Preprocessing}
 Before giving the data to the model we preprocess it in multiple steps. First, the signals are filtered out that are below a threshold and likely correspond to noise from the floor. This threshold is defined to be $\tau = 140$ for this paper, but it could vary depending on the floor setup and its surface material. Then, the frames at which a significant SensFloor signal was measured are selected and assigned the pose of that frame. By that, we end up with a dataset containing both significant signals as input and a corresponding pose as the target.
