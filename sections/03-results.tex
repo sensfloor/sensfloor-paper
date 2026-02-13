@@ -2,12 +2,12 @@
 \label{sec:results}
 This section presents an evaluation of our results and a discussion of the model's performance. We begin with a visual comparison between an estimated and ground-truth pose, followed by a detailed analysis of the model's performance on the test set. Finally, we examine the resulting trajectories from our localization pipeline.
 
-\subsection{Visual comparison of estimated and ground truth pose}
+\subsection{Visual Comparison of Estimated and Ground Truth Pose}
 Figure \ref{fig:pose-comparison} illustrates a visual comparison between the estimated pose and the corresponding ground truth from the test set, shown from four perspectives rotated at 0°, 90°, 180° and 270° angles. Overall, the estimated pose captures the global body posture of the target well. In particular, the global orientation of the skeleton and the left-leg joint positions align closely with the ground truth. However, discrepancies are visible in the right lower leg, which appears shifted further back relative to the ground truth. Furthermore, the estimated upper body exhibits a slightly stronger forward lean that the reference.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\columnwidth]{img/pose_comparison.pdf}
+    \includegraphics[width=0.8\columnwidth]{img/pose_comparison.pdf}
     \caption{Comparison of a single estimated 3D pose (red) to its corresponding ground truth pose (blue) from four different perspectives.}
     \Description{}
     \label{fig:pose-comparison}
@@ -18,6 +18,9 @@ Our recorded metrics for the testset mirror the comparison quite well. Figure \r
 
 Secondly, there are quite some outliers with big errors up to 30~cm. This can represent an entirely different pose. These outliers occur for two reasons. Either the subject has just stepped on the floor and there is no history information available, which gives the model not enough information to estimate an accurate pose or the subject performs an unforseen action, for example by rapidly changing the directions or moving their body unnaturally. 
 
+% Is there really a mismatch? The right angle and knee seem to perform better than the left side. Maybe just variance in data?
+% More ideas to mention:
+% - Why are the elbow and wrist estimations better than the angle estimations? (ankle is closest to floor and should be the best then?)
 Thirdly, there is a tiny mismatch between the left and right side of the joints. By looking into the predicted poses from MediaPipe we found that the predicted height of the joints has different statistics. This is most likely due to our data collection setup where we recorded from a 45° angle leading to one side of the body being covered more by the rest of the body leading to small occlusion effects. This leads to a higher variance of the predictions from MediaPipe and a higher error and variance in the prediction errors which are compared to the predictions from MediaPipe. 
 
 \begin{figure}[htbp]

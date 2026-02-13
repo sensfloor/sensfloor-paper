@@ -24,11 +24,11 @@ By splitting the problem into these two tasks, the system requires only a small 
 % - How does the recording setup look like?
 % - Collect video and sensfloor at the same time -> Output: mp4 and csv
 % - Creating targets for training using MediaPipe -> Output: Ground truth joint positions in coordinate system with hip as origin
-\subsection{Data collection}
+\subsection{Data Collection}
 To enable supervised training of the LSTM model, we collected a dataset of SensFloor signals and corresponding pose targets. 
 For this purpose, we recorded in two sessions a total of eight hours of synchronized SensFloor signals and video at 15~FPS of three participants walking on the floor. Furthermore, we captured some additional short sequences from three further participants that are used for testing only. To synchronize the data, we matched each received SensFloor signal to the video frame number recorded at the same time. To extract the final 3D pose targets from the video feed, we used a MediaPipe pose estimation model, which builds upon the BlazePose architecture \cite{bazarevsky2020blazeposeondevicerealtime}. It is worth noting that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips. This allows the decomposition of the paper's problem into the previously introduced two tasks of pose estimation relative to the hip and localization on the global floor.
 
-\subsection{Training Data preprocessing}
+\subsection{Training Data Preprocessing}
 % - Unique frames
 Before giving the data to our model we preprocess it in several ways. First we filter signals that are beneath a threshold and likely correspond to noise from the floor. We defined the threshold to be $\tau = 140$, but it could vary depending on the floor setup and its surface material. Then we select the frames, at which a significant SensFloor signal was measured and assign them the pose of that frame, ending up with a dataset containing both significant signals as input and a pose as the target.
 % - Data split
@@ -51,7 +51,7 @@ Finally, we use 13 of the 33 joints given by MediaPipe, excluding eyes, ears, mo
     \label{fig:roi}
 \end{figure}
 
-\subsection{Pose estimation model}
+\subsection{Pose Estimation Model}
 % Describe training of the model
 % - Model architecture: Supervised regression model
 % - Loss (link loss, MSE)
@@ -118,5 +118,5 @@ We identify the subject's contact points with the floor by grouping adjacent act
 Because the raw position estimates are noisy and lead to erratic, unnatural movement in the visualization, we apply a Kalman Filter to ensure a smooth trajectory. Similar to \cite[255 ff.]{rogerr.2024kalmanbayesianfilters}, the filter's state vector is defined as $\mathbf{x} = [x, y, \dot{x}, \dot{y}]^T$, where $x$ and $y$ are the position coordinates and $\dot{x}$ and $\dot{y}$ the corresponding velocities. Due to the absence of ground-truth tracking data for exact calibration, we tuned the filter's noise parameters empirically until the trajectory visually matched the subject's actual movement in the recorded videos.
 
 
-\subsection{Visualization of predicted 3D Pose}
+\subsection{Visualization of Predicted 3D Pose}
 For visual evaluating and demo-purposes of the pose estimation pipeline, we furthermore implemented a frontend. The estimated pose and its position are streamed to the frontend using a WebSocket. The frontend then visualizes a simulated environment of the floor and the person's pose moving on it.
