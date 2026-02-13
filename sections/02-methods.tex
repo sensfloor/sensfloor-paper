@@ -29,19 +29,19 @@ To enable supervised training of the LSTM model, we collected a dataset of SensF
 For this purpose, we recorded in two sessions a total of eight hours of synchronized SensFloor signals and video at 15~FPS of three participants walking on the floor. Furthermore, we captured some additional short sequences from three further participants that are used for testing only. To synchronize the data, we matched each received SensFloor signal to the video frame number recorded at the same time. To extract the final 3D pose targets from the video feed, we used a MediaPipe pose estimation model, which builds upon the BlazePose architecture \cite{bazarevsky2020blazeposeondevicerealtime}. It is worth noting that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips. This allows the decomposition of the paper's problem into the previously introduced two tasks of pose estimation relative to the hip and localization on the global floor.
 
 \subsection{Data Preprocessing}
-% - Unique frames
-Before giving the data to our model we preprocess it in several ways. First we filter signals that are beneath a threshold and likely correspond to noise from the floor. We defined the threshold to be $\tau = 140$, but it could vary depending on the floor setup and its surface material. Then, we select the frames at which a significant SensFloor signal was measured and assign them the pose of that frame, ending up with a dataset containing both significant signals as input and a pose as the target.
+Before giving the data to the model we preprocess it in multiple steps. First, the signals are filtered out that are below a threshold and likely correspond to noise from the floor. This threshold is defined to be $\tau = 140$ for this paper, but it could vary depending on the floor setup and its surface material. Then, the frames at which a significant SensFloor signal was measured are selected and assigned the pose of that frame. By that, we end up with a dataset containing both significant signals as input and a corresponding pose as the target.
+
+When loading a data sample, the SensFloor input signals of the triangular shaped sensor fields are interpolated into a grid so that they can be used as input for the model. For that cause, every two adjacent fields that form a rectangle are transformed into a $2\times2$ square where the corners are assigned the original signal value and the diagonal fields their mean. Figure \ref{fig:roi} depicts this transformation. 
+
+After that, a ROI history is created, which is the temporal sequence of the floor areas with the highest activations. The history length is defined as 50 frames and the ROI as a grid of $4\times4$ patches. 
+The position of the ROI is calculated by going back 50 frames in time, adding up the corresponding signal values for each sensor field and taking the area of patches, for which the highest total signal value was measured.
+
+Finally, all signals are normalized to the range $[0, 1]$, where values of 127 will be 0 and values of 255 will be 1. So for parts where there are no signals, the model receives 0.
+
+Regarding the targets, the dataset contains a subset of 13 out of 33 joints extracted by MediaPipe for training and inference. We exclude eyes, ears, mouth and fingers because their contribution to the person's overall pose is negligible. Additionally, the foot heel and foot index are excluded, because when analyzing the targets we found that MediaPipe predicted these bones unreliably to lengths of 3 to 18~cm. With an $x$, $y$ and $z$ coordinate for each target joint, this results in $N_{out}=13\times3=39$ continuous coordinates for the model to predict.
+
 % - Data split
-Next, we split the dataset sequence-wise with $80\%$ for training, $10\%$ for validating and $10\%$ for testing, ending up with 174,949 poses\todo{check numbering consistent} for training\todo{Datasetlength Train length?}. When we load one item of this set we create a ROI history, which is a temporal sequence of areas of highest activation. We defined the length of the history as 50 and the ROI is a $4\times4$ grid of the floor with the signal values for this frame. This grid is a squared înterpolation of the triangular SensFloor patches explained in section \ref{sec:introduction}; two fields that form a rectangle are transformed into a $2\times2$ square where the diagonal is the mean value of the fields. Figure \ref{fig:roi} depicts this transformation.
-\todo{confirm roi explanation} % maybe that's not so important but if we have space
-% - Data (roi, history)
-The history is created by going back 50 frames and for each frame taking a ROI with the signals received at this frame. When there are no signals in the frame we take an empty ROI containing only signals with the value 127
-% - normalize: 0-1 and not -1 to 1 because most will be 0. e.g. 127
-All signals are normalized to the range $[0, 1]$, where values of 127 will be 0 and values of 255 will be 1. So for parts where there are no signals, the model receives 0.
-% - Transformation (rotate)
-% Because the ROI is independent in the rest of the floor, we randomly rotate full ROI histories by $\{0, 90, 180, 270\}$ degrees for a more robust training.
-% - Joints excluded
-Finally, we use 13 of the 33 joints given by MediaPipe, excluding eyes, ears, mouth and fingers because they are irrelevant for our goal. Additionally, we exclude the foot heel and foot index, because when analyzing the targets we found that MediaPipe predicted these bones unreliably to lengths of 3 to 18~cm. With an $x$ $y$ and $z$ coordinate for each joint, this gives our model $N_{out}=13\times3=39$ continuous coordinates to predict.
+The final dataset is split sequence-wise with $80\%$ for training (\textasciitilde174k poses), $10\%$ for validating and $10\%$ for testing (each \textasciitilde21k poses). 
 
 \begin{figure}
     \centering
