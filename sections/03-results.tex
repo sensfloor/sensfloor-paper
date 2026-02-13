@@ -25,7 +25,7 @@ Thirdly, there is a tiny mismatch between the left and right side of the joints.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\columnwidth]{img/mjpe.pdf}
+    \includegraphics[width=\columnwidth]{img/mjpe_boxplot.pdf}
     \caption{Mean Joint Position Error Boxplot for each joint on the testset with $n=21898$ samples. The box is the Interquartile Range (IQR) and the Whiskers extend the box by $1.5\times$ IQR. Left and Right are abbreviated to 'L.' and 'R.'}
     \Description{}
     \label{fig:mjpe}
@@ -68,3 +68,4 @@ However, applying the Kalman filter largely reduces these issues, as illustrated
     % - No groundtruth for kalman filter
     % - testset split? No evaluation that our test and trianing set have a similar distribution
     % - Model learned to Look down
+    % - Only small sequences of walking possible due to the small floor (and missing API endpoint with good estimations probably)
