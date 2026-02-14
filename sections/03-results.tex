@@ -5,10 +5,6 @@ This section presents an evaluation of the results and a discussion of the model
 \subsection{SensFloor Pose Estimation Model}
 The model training stopped early after 22 epochs with an overall performance of 5.5~cm MPJPE, 87\% PCK@10 and 63\% PCK@5. In the following, we visually compare an estimated to its target pose and analyze the performance across specific joints.
 
-% TEST_MJPE_MEAN: 0.0547 | TEST_MJPE_NOSE: 0.0563 | TEST_MJPE_LEFT_SHOULDER: 0.0410 | TEST_MJPE_RIGHT_SHOULDER: 0.0421 | TEST_MJPE_LEFT_ELBOW: 0.0535 | TEST_MJPE_RIGHT_ELBOW: 0.0548 | TEST_MJPE_LEFT_WRIST: 0.0701 | TEST_MJPE_RIGHT_WRIST: 0.0731 | TEST_MJPE_LEFT_HIP: 0.0205 | TEST_MJPE_RIGHT_HIP: 0.0204 | TEST_MJPE_LEFT_KNEE: 0.0536 | TEST_MJPE_RIGHT_KNEE: 0.0486 | TEST_MJPE_LEFT_ANKLE: 0.0905 | TEST_MJPE_RIGHT_ANKLE: 0.0871
-%TEST_PCK_10_MEAN: 0.8674 | TEST_PCK_10_NOSE: 0.8777 | TEST_PCK_10_LEFT_SHOULDER: 0.9364 | TEST_PCK_10_RIGHT_SHOULDER: 0.9350 | TEST_PCK_10_LEFT_ELBOW: 0.8815 | TEST_PCK_10_RIGHT_ELBOW: 0.8826 | TEST_PCK_10_LEFT_WRIST: 0.8102 | TEST_PCK_10_RIGHT_WRIST: 0.7880 | TEST_PCK_10_LEFT_HIP: 0.9858 | TEST_PCK_10_RIGHT_HIP: 0.9856 | TEST_PCK_10_LEFT_KNEE: 0.8714 | TEST_PCK_10_RIGHT_KNEE: 0.8989 | TEST_PCK_10_LEFT_ANKLE: 0.7045 | TEST_PCK_10_RIGHT_ANKLE: 0.7183
-%TEST_PCK_5_MEAN: 0.6291 | TEST_PCK_5_NOSE: 0.5960 | TEST_PCK_5_LEFT_SHOULDER: 0.7459 | TEST_PCK_5_RIGHT_SHOULDER: 0.7492 | TEST_PCK_5_LEFT_ELBOW: 0.6339 | TEST_PCK_5_RIGHT_ELBOW: 0.6144 | TEST_PCK_5_LEFT_WRIST: 0.4841 | TEST_PCK_5_RIGHT_WRIST: 0.4634 | TEST_PCK_5_LEFT_HIP: 0.9265 | TEST_PCK_5_RIGHT_HIP: 0.9272 | TEST_PCK_5_LEFT_KNEE: 0.6352 | TEST_PCK_5_RIGHT_KNEE: 0.6728 | TEST_PCK_5_LEFT_ANKLE: 0.3553 | TEST_PCK_5_RIGHT_ANKLE: 0.3739
-
 \subsubsection{Visual Comparison of Estimated and Target Pose} Figure \ref{fig:pose-comparison} illustrates a visual comparison between the estimated pose and the corresponding ground-truth from the test set, shown from four perspectives rotated at 0°, 90°, 180° and 270° angles. Overall, the estimated pose captures the global body posture of the target well. In particular, the global orientation of the skeleton and the left-leg joint positions align closely with the ground-truth. However, discrepancies are visible in the right lower leg, which appears shifted further back relative to the ground-truth. Furthermore, the estimated upper body exhibits a slightly stronger forward lean than the reference.
 
 \begin{figure}[htbp] 
@@ -25,8 +21,8 @@ In contrast, the wrists and ankles as the most distal joints, move the most and 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\columnwidth]{img/mpjpe_boxplot.pdf}
-    \caption{Boxplot of Mean Per Joint Position Error (MPJPE) for each joint on test set with $n=21898$ samples. The box indicates the interquartile range and the whiskers mark the $5^{th}$ and $95^{th}$ percentile.} %TODO: remove samples if not enough space
+    \includegraphics[width=\columnwidth]{img/test_metrics_boxplot.pdf}
+    \caption{Boxplot of Mean Per Joint Position Error (MPJPE) for each joint on test. The box indicates the interquartile range and the whiskers mark the $5^{th}$ and $95^{th}$ percentile.} %TODO: remove samples if not enough space
     \Description{}
     \label{fig:mpjpe}
 \end{figure}
