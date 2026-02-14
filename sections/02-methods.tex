@@ -66,7 +66,7 @@ The CNN encoder consists of three sequential 2D convolutional layers with $3\tim
 
 The model was trained for a maximum of 40 epochs using early-stopping and a batch size of 32. Optimization was performed via AdamW with a learning rate of $1\times10^{-4}$ and a weight decay of $1\times10^{-2}$.
 
-To assess the model performance, we utilize two metrics: Mean Per Joint Position Error (MPJPE) and Percentage of Correct Key Points (PCK) \cite[22 f.]{zheng2023deeplearningbasedhuman}. MPJPE quantifies the average Euclidean distance between estimated and target joints, while PCK measures the percentage of estimates whose distance errors fall below a threshold, which we set at 5~cm (PCK@5) and 10~cm (PCK@10).
+To assess the model performance, we utilize two metrics: Mean Per Joint Position Error (MPJPE) and Percentage of Correct Key Points (PCK) \cite[22 f.]{zheng2023deeplearningbasedhuman}. MPJPE quantifies the average Euclidean distance in cm between estimated and target joints, while PCK measures the percentage of estimates whose distance errors fall below a threshold, which we set at 5~cm (PCK@5) and 10~cm (PCK@10).
 
 \subsection{Loss function}
 The CNN-LSTM model receives the signals in the ROI sequentially and produces $N_{out}$ coordinate estimates. These coordinates are given into the loss function, which is defined as

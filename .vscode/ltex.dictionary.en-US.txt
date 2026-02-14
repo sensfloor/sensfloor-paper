@@ -6,3 +6,4 @@ BlazePose
 ReLU
 AdamW
 MPJPE
+Boxplot

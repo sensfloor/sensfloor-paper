@@ -1,11 +1,17 @@
 \section{Results}
 \label{sec:results}
-This section presents an evaluation of our results and a discussion of the model's performance. We begin with a visual comparison between an estimated and ground-truth pose, followed by a detailed analysis of the model's performance on the test set. Finally, we examine the resulting trajectories from our localization pipeline. 
+This section presents an evaluation of the results and a discussion of the model's performance, followed by an examination of the resulting trajectories from the localization pipeline. 
 
-\subsection{Visual Comparison of Estimated and Ground Truth Pose}
-Figure \ref{fig:pose-comparison} illustrates a visual comparison between the estimated pose and the corresponding ground-truth from the test set, shown from four perspectives rotated at 0°, 90°, 180° and 270° angles. Overall, the estimated pose captures the global body posture of the target well. In particular, the global orientation of the skeleton and the left-leg joint positions align closely with the ground-truth. However, discrepancies are visible in the right lower leg, which appears shifted further back relative to the ground-truth. Furthermore, the estimated upper body exhibits a slightly stronger forward lean than the reference.
+\subsection{SensFloor Pose Estimation Model}
+The model training stopped early after 22 epochs with an overall performance of 5.5~cm MPJPE, 87\% PCK@10 and 63\% PCK@5. In the following, we visually compare an estimated to its target pose and analyze the performance across specific joints.
 
-\begin{figure}[htbp]
+% TEST_MJPE_MEAN: 0.0547 | TEST_MJPE_NOSE: 0.0563 | TEST_MJPE_LEFT_SHOULDER: 0.0410 | TEST_MJPE_RIGHT_SHOULDER: 0.0421 | TEST_MJPE_LEFT_ELBOW: 0.0535 | TEST_MJPE_RIGHT_ELBOW: 0.0548 | TEST_MJPE_LEFT_WRIST: 0.0701 | TEST_MJPE_RIGHT_WRIST: 0.0731 | TEST_MJPE_LEFT_HIP: 0.0205 | TEST_MJPE_RIGHT_HIP: 0.0204 | TEST_MJPE_LEFT_KNEE: 0.0536 | TEST_MJPE_RIGHT_KNEE: 0.0486 | TEST_MJPE_LEFT_ANKLE: 0.0905 | TEST_MJPE_RIGHT_ANKLE: 0.0871
+%TEST_PCK_10_MEAN: 0.8674 | TEST_PCK_10_NOSE: 0.8777 | TEST_PCK_10_LEFT_SHOULDER: 0.9364 | TEST_PCK_10_RIGHT_SHOULDER: 0.9350 | TEST_PCK_10_LEFT_ELBOW: 0.8815 | TEST_PCK_10_RIGHT_ELBOW: 0.8826 | TEST_PCK_10_LEFT_WRIST: 0.8102 | TEST_PCK_10_RIGHT_WRIST: 0.7880 | TEST_PCK_10_LEFT_HIP: 0.9858 | TEST_PCK_10_RIGHT_HIP: 0.9856 | TEST_PCK_10_LEFT_KNEE: 0.8714 | TEST_PCK_10_RIGHT_KNEE: 0.8989 | TEST_PCK_10_LEFT_ANKLE: 0.7045 | TEST_PCK_10_RIGHT_ANKLE: 0.7183
+%TEST_PCK_5_MEAN: 0.6291 | TEST_PCK_5_NOSE: 0.5960 | TEST_PCK_5_LEFT_SHOULDER: 0.7459 | TEST_PCK_5_RIGHT_SHOULDER: 0.7492 | TEST_PCK_5_LEFT_ELBOW: 0.6339 | TEST_PCK_5_RIGHT_ELBOW: 0.6144 | TEST_PCK_5_LEFT_WRIST: 0.4841 | TEST_PCK_5_RIGHT_WRIST: 0.4634 | TEST_PCK_5_LEFT_HIP: 0.9265 | TEST_PCK_5_RIGHT_HIP: 0.9272 | TEST_PCK_5_LEFT_KNEE: 0.6352 | TEST_PCK_5_RIGHT_KNEE: 0.6728 | TEST_PCK_5_LEFT_ANKLE: 0.3553 | TEST_PCK_5_RIGHT_ANKLE: 0.3739
+
+\subsubsection{Visual Comparison of Estimated and Target Pose} Figure \ref{fig:pose-comparison} illustrates a visual comparison between the estimated pose and the corresponding ground-truth from the test set, shown from four perspectives rotated at 0°, 90°, 180° and 270° angles. Overall, the estimated pose captures the global body posture of the target well. In particular, the global orientation of the skeleton and the left-leg joint positions align closely with the ground-truth. However, discrepancies are visible in the right lower leg, which appears shifted further back relative to the ground-truth. Furthermore, the estimated upper body exhibits a slightly stronger forward lean than the reference.
+
+\begin{figure}[htbp] 
     \centering
     \includegraphics[width=\columnwidth]{img/pose_comparison.pdf}
     \caption{Comparison of a single estimated 3D pose (red) to its corresponding ground-truth pose (black) from four different perspectives.}
@@ -13,42 +19,33 @@ Figure \ref{fig:pose-comparison} illustrates a visual comparison between the est
     \label{fig:pose-comparison}
 \end{figure}
 
-\subsection{Metrics}
-Our recorded metrics for the test set mirror the results of the visual comparison. Figure \ref{fig:mjpe} shows the Mean Joint Position Error (MJPE) for all items from the test set. The hip was the easiest joint to estimate with about 2~cm median error. The local coordinate system from MediaPipe starts from the hip which reduces the possible space to two dimensions, making the estimation a lot easier. On the other hand the most outer joints, the wrist and ankle, which are further away and move the most in space, performed the worst, with a median of approximately 5~cm and 7~cm and a bigger IQR. For all joints 75\% of the estimations are within 12~cm. Given how complex a pose can be, especially with rotation included, this is not just predicting a mean pose. 
-\todo{we should mention our trainmetrics right?} %To see how model training performed and overfitting and stuff for transparency? 
-
-Secondly, while most of the data has a reasonable error, there is a significant portion with higher errors. We explained this for two reasons: There are poses which have a signal, but no history information available when the subject has just entered the SensFloor which gives the model not enough information to estimate an accurate pose and when the subject performs an unforseen action, for example by rapidly changing the directions or moving their body unnaturally, e.g. looking at their watch, fixing sweater. 
-
-Thirdly, there is a tiny mismatch between the left and right side of the joints. We concluded this mismatch to stem from the targets themselves. As MediaPipe does not provide 100\% accurate targets, the specific setup of our data collection could influence the outcome.  
+\subsubsection{Joint Estimations}
+Our recorded metrics for the test set, illustrated in Figure \ref{fig:mpjpe}, mirror the results of the visual comparison. The hip was the easiest joint to estimate with about 2~cm median error, because in the poses' local coordinate system, they mostly rotate proximal around the origin and do not move a lot.
+In contrast, the wrists and ankles as the most distal joints, move the most and performed the worst, with a median of approximately 5~cm and 7~cm and a bigger interquartile range (IQR). If the model always predicted the mean pose, the overall error of all test-targets would be around 22~cm for wrists and 18~cm for the ankles. Compared to this baseline, this is a significant improvement.  
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\columnwidth]{img/mjpe_boxplot.pdf}
-    \caption{Boxplot of Mean Joint Position Error for each joint on test set with $n=21898$ samples. The box is the Interquartile Range (IQR) and the Whiskers mark the $5^{th}$ and $95^{th}$ percentile.}
+    \includegraphics[width=\columnwidth]{img/mpjpe_boxplot.pdf}
+    \caption{Boxplot of Mean Per Joint Position Error (MPJPE) for each joint on test set with $n=21898$ samples. The box indicates the interquartile range and the whiskers mark the $5^{th}$ and $95^{th}$ percentile.} %TODO: remove samples if not enough space
     \Description{}
-    \label{fig:mjpe}
+    \label{fig:mpjpe}
 \end{figure}
 
-Furthermore the figure explains the big difference for the results of the Percentage Correct Key points (PCK) between a 5~cm and 10~cm threshold on the ankles. As the Interquartile range for the MJPE of the feet ankles lay just above 5~cm the PCK for this threshold is $36\%$ where for 10~cm it is $70\%$.
-The mean PCK of all joints for 5~cm is $63\%$ and for 10~cm it is $87\%$.
-\todo{should we Maybe the val\_loss graph or sth would be nice}
-The full metrics can be found in annex ref\todo{ref annex}.
+Though, while most of the data has a reasonable error, there is a significant portion with higher errors. We explained this for two reasons: First, when the subject performs an unforeseen action by rapidly changing the directions or moving their body unnaturally for example by looking at their watch, the model is not able to predict this.
+Second, when the subject has just entered the SensFloor, there is no history information available and the model guesses the stepping foot. Empirical tests during inference confirmed these sources of error.
 
-% - Predicted pose compared to true pose image
-% - Training metrics (boxplot and mention pck) explain tha numbers
+Furthermore, the ankles exhibit a significantly higher error than the elbows and wrists. This finding is counterintuitive, as the proximity of the ankles to the floor would suggest a higher localization accuracy for these joints. A potential explanation for this may lie in the target pose extraction. MediaPipe tends to estimate the same bone lengths across subjects of varying heights. These fixed proportions may lead to a misalignment between the SensFloor signals and the corresponding joint coordinates, which most significantly impacts the joints close to the floor.
 
 
-% - Estimated position (House of Kalmann)
 \subsection{Localization and Kalman-Filter Effect}
 In \ref{subsec:localization}, we introduced our approach for extracting information about the person's current global position from the SensFloor activation signals. The left side of Figure \ref{fig:kalman-filter-effect} shows the raw clustering position trajectory we recorded during a test walk. The illustrated trajectory is highly erratic. This instability is caused by two main factors. First, the algorithm creates jumps in the estimated position as the mean shifts abruptly whenever a foot makes or breaks contact with the floor. Second, the SensFloor fields produce significant background noise, even in areas where no activity takes place. While increasing the noise signal threshold suppresses some of the noise, it is not a universal solution, as signal intensity of people moving on the floor varies depending on the person's footwear. 
 
 However, applying the Kalman filter largely reduces these issues, as illustrated on the right side of Figure \ref{fig:kalman-filter-effect}. By smoothing out the abrupt transitions and mitigating the impact of outliers, the filter produces a smooth and, according to our empirical evaluation, accurate trajectory.
 
-\todo{set the arrows to a fixed size, so it's not confusing}
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\columnwidth]{img/kalman-filter-effect.pdf}
-    \caption{Comparison of raw (left) and filtered (right) localization trajectories. The arrows indicate the direction of the movement.}
+    \caption{Comparison of raw (left) and filtered (right) localization trajectories. The arrows indicate the direction of the movement, a smaller movement results in a smaller arrow.}
     \Description{}
     \label{fig:kalman-filter-effect}
 \end{figure}
@@ -62,5 +59,5 @@ However, applying the Kalman filter largely reduces these issues, as illustrated
     % - No groundtruth for kalman filter
     % - test set split? No evaluation that our test and trianing set have a similar distribution
     % - Model learned to Look down
-    % - Only small sequences of walking possible due to the small floor (and missing API endpoint with good estimations probably)
+    % - Only small sequences of walking possible due to the small floor (and missing API endpoint)
     % - Very limited training set with 
