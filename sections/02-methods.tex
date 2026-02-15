@@ -58,11 +58,9 @@ The final dataset is split sequence-wise with $80\%$ for training (\textasciitil
 % - Training setup (config) and how we determined the hyperparameters -> Mention what joints we predict here (or in data collection)
 % - Metrics (PCK, MJPE)
 % - What is the output?
-\todo{Mention regression model}
 The model developed in this paper implements an LSTM architecture which is based on the classification model from \cite{hoffmann2021detectingwalkingchallenges}. We adapted the task from classification of walking modes to the regression task of estimating 3D joint coordinates. Furthermore, we added a CNN encoder prior to the LSTM to utilize the 2D spatial data of the SensFloor signals.
 
-The CNN encoder consists of three sequential 2D convolutional layers with $3\times3$ kernels, increasing the channel size from 32, 64, to 128. Each convolution is followed by batch normalization and a ReLU activation, with $2\times2$ max pooling applied after the second and third layer. The resulting feature maps are flattened and passed through a linear layer to obtain a 256-dimensional embedding. This embedding is then input to the LSTM with a hidden size of 256, using a dropout of 0.2 during training. Finally, the regression head processes the last hidden state through a four-layer multi-layer perceptron with layer sizes [256, 256, 128, $N_{out}$] and ReLU activations.
-\todo{Last layer probably no ReLU function}
+The CNN encoder consists of three sequential 2D convolutional layers with $3\times3$ kernels, increasing the channel size from 32, 64, to 128. Each convolution is followed by batch normalization and a ReLU activation, with $2\times2$ max pooling applied after the second and third layer. The resulting feature maps are flattened and passed through a linear layer to obtain a 256-dimensional embedding. This embedding is then input to the LSTM with a hidden size of 256, using a dropout of 0.2 during training. Finally, the regression head processes the last hidden state through a four-layered neural network with layer sizes [256, 256, 128, $N_{out}$] and ReLU activations, respectively linear activation for the last layer.
 
 The model was trained for a maximum of 40 epochs using early-stopping and a batch size of 32. Optimization was performed via AdamW with a learning rate of $1\times10^{-4}$ and a weight decay of $1\times10^{-2}$.
 
