@@ -1,7 +1,7 @@
 \section{Methods}
 \label{sec:methods}
-% General overview of how to solve the problem (localization and pose prediction)
 To achieve the goal of estimating poses using a SensFloor and visualizing them, we split up the problem into two tasks: pose estimation and localization, which are illustrated in Figure \ref{fig:methods-overview}.
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\columnwidth]{img/methods-overview.pdf}
@@ -10,37 +10,28 @@ To achieve the goal of estimating poses using a SensFloor and visualizing them, 
     \label{fig:methods-overview}
 \end{figure}
 
-The first task of pose estimation uses a trained deep-learning model that estimates the person's joint coordinates in a local coordinate system. For that we collected a labeled dataset of SensFloor signals and target poses. Using this dataset, we trained a Long Short-Term Memory (LSTM) model to predict human poses from sensor activations within an extracted Region of Interest (ROI).
+The first task of pose estimation uses a trained deep-learning model that estimates the person's joint coordinates in a local coordinate system. For that, we collected a labeled dataset of SensFloor signals and target poses. Using this dataset, we trained a Long Short-Term Memory (LSTM) model to predict human poses from sensor activations within an extracted Region of Interest (ROI).
+The second task of localization extracts the global position of the pose on the entire floor by signal clustering and smoothing the resulting position using a Kalman filter. Finally, the estimated pose and position are combined and visualized in a real-time simulation of the SensFloor environment.
 
-The second task of localization extracts the global position of the pose on the complete floor by signal clustering and smoothing the resulting position using a Kalman filter.
-
-Finally, the estimated pose and position are combined and visualized in a real-time simulation of the SensFloor environment.
-
-By splitting the problem into these two tasks, the system requires only a small extracted active area of the floor for pose estimation. This enables the system to be ported to other floors of different dimensions.
+By splitting the problem into these two tasks, the system requires only a small extracted active area of the floor for pose estimation, enabling it to be ported to floors of different dimensions.
 
 
-% Data collection (important: mention how our data looks like)
-% - Who did we collect?
-% - How does the recording setup look like?
-% - Collect video and sensfloor at the same time -> Output: mp4 and csv
-% - Creating targets for training using MediaPipe -> Output: Ground truth joint positions in coordinate system with hip as origin
 \subsection{Data Collection}
 To enable supervised training of the LSTM model, we collected a dataset of SensFloor signals and corresponding pose targets. 
-Over two sessions, we recorded a total of eight hours of synchronized SensFloor signals and video footage at 15~FPS of three participants walking on the floor. Moreover, we captured some short sequences from three additional participants that were used to assess the model further. To synchronize the data, we matched each received SensFloor signal to the video frame number recorded at the same time. To extract the final 3D pose targets from the video feed, we used a MediaPipe pose estimation model, which builds upon the BlazePose architecture \cite{bazarevsky2020blazeposeondevicerealtime}. It is worth noting that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips. This allows the decomposition of the paper's problem into the previously introduced two tasks of pose estimation relative to the hip and localization on the global floor.
+Over two sessions, we recorded a total of eight hours of synchronized SensFloor signals and video footage at 15~FPS from three participants walking on the floor. Moreover, we captured some short sequences from three additional participants that were used to assess the model further. To synchronize the data, we matched each received SensFloor signal to the video frame recorded at the same time. To extract the final 3D pose targets from the video feed, we used MediaPipe's pose estimation model, which builds upon the BlazePose architecture \cite{bazarevsky2020blazeposeondevicerealtime}. It is worth noting that the origin of MediaPipe's pose estimates coordinate system is located at the center of the hips. This allows the decomposition of the paper's problem into the previously introduced two tasks of pose estimation relative to the hip and localization on the global floor.
 
 \subsection{Data Preprocessing}
-Before giving the data to the model we preprocess it in multiple steps. First, the signals are filtered out that are below a threshold and likely correspond to noise from the floor. This threshold is defined to be $\tau = 140$ for this paper, but it could vary depending on the floor setup and its surface material. Then, the frames at which a significant SensFloor signal was measured are selected and assigned the pose of that frame. By that, we end up with a dataset containing both significant signals as input and a corresponding pose as the target.
+Before inputting data into the model, we preprocess it in multiple steps. First, signals below a threshold that likely correspond to noise are filtered out. This threshold is defined as $\tau = 140$ for this paper, though it could vary depending on the floor setup and its surface material. Then, the frames at which a significant SensFloor signal was measured are selected and assigned the pose of that frame. This results in a dataset containing both significant signals as inputs and corresponding poses as targets.
 
-When loading a data sample, the SensFloor input signals of the triangular shaped sensor fields are interpolated into a grid so that they can be used as input for the model. For that cause, every two adjacent fields that form a rectangle are transformed into a $2\times2$ square where the corners are assigned the original signal value and the diagonal fields their mean. Figure \ref{fig:roi} depicts this transformation. 
+When loading a data sample, the input signals from the triangular sensor fields are interpolated into a grid. For that purpose, every two adjacent fields forming a rectangle are transformed into a $2\times2$ square where the corners are assigned the original signal value and the diagonal fields their mean. Figure \ref{fig:roi} depicts this transformation. 
 
-After that, a ROI history is created, which is the temporal sequence of the floor areas with the highest activations. The history length is defined as 50 frames and the ROI as a grid of $4\times4$ patches. 
-The position of the ROI is calculated by going back 50 frames in time, adding up the corresponding signal values for each sensor field and taking the area of patches, for which the highest total signal value was measured.
+Afterward, a ROI history is created, which is the temporal sequence of the floor areas with the highest activations. The history length is defined as 50 frames and the ROI as a grid of $4\times4$ patches. 
+The position of the ROI is calculated by looking back 50 frames, summing the corresponding signal values for each sensor field and selecting the area of patches with the highest total signal value.
 
 Finally, all signals are normalized to the range $[0, 1]$, where values of 127 will be 0 and values of 255 will be 1. So for parts where there are no signals, the model receives 0.
 
-Regarding the targets, the dataset contains a subset of 13 out of 33 joints extracted by MediaPipe for training and inference. We exclude eyes, ears, mouth and fingers because their contribution to the person's overall pose is negligible. Additionally, the foot heel and foot index are excluded, because when analyzing the targets we found that MediaPipe predicted these bones unreliably to lengths of 3 to 18~cm. With an $x$, $y$ and $z$ coordinate for each target joint, this results in $N_{out}=13\times3=39$ continuous coordinates for the model to predict.
+Regarding the targets, the dataset contains a subset of 13 out of 33 joints extracted by MediaPipe. We exclude eyes, ears, mouth and fingers because their contribution to the overall pose is negligible. Additionally, the heel and foot index are excluded, because when analyzing the targets, we found that MediaPipe predicted these bones unreliably to lengths of 3 to 18~cm. With an $x$, $y$ and $z$ coordinate for each target joint, this results in $N_{out}=13\times3=39$ continuous coordinates for the model to predict.
 
-% - Data split
 The final dataset is split sequence-wise with $80\%$ for training (\textasciitilde174k poses), $10\%$ for validating and $10\%$ for testing (each \textasciitilde21k poses). 
 
 \begin{figure}
@@ -52,51 +43,41 @@ The final dataset is split sequence-wise with $80\%$ for training (\textasciitil
 \end{figure}
 
 \subsection{Pose Estimation Model}
-% Describe training of the model
-% - Model architecture: Supervised regression model
-% - Loss (link loss, MSE)
-% - Training setup (config) and how we determined the hyperparameters -> Mention what joints we predict here (or in data collection)
-% - Metrics (PCK, MJPE)
-% - What is the output?
-The model developed in this paper implements an LSTM architecture which is based on the classification model from \cite{hoffmann2021detectingwalkingchallenges}. We adapted the task from classification of walking modes to the regression task of estimating 3D joint coordinates. Furthermore, we added a CNN encoder prior to the LSTM to utilize the 2D spatial data of the SensFloor signals.
+The model developed in this paper implements an LSTM architecture based on the classification model from \cite{hoffmann2021detectingwalkingchallenges}. We adapted the task from classifying walking modes to the regression task of estimating 3D joint coordinates. Furthermore, we added a CNN encoder prior to the LSTM to utilize the 2D spatial data of the SensFloor signals.
 
-The CNN encoder consists of three sequential 2D convolutional layers with $3\times3$ kernels, increasing the channel size from 32, 64, to 128. Each convolution is followed by batch normalization and a ReLU activation, with $2\times2$ max pooling applied after the second and third layer. The resulting feature maps are flattened and passed through a linear layer to obtain a 256-dimensional embedding. This embedding is then input to the LSTM with a hidden size of 256, using a dropout of 0.2 during training. Finally, the regression head processes the last hidden state through a four-layered neural network with layer sizes [256, 256, 128, $N_{out}$] and ReLU activations, respectively linear activation for the last layer.
+The CNN encoder consists of three sequential 2D convolutional layers with $3\times3$ kernels, increasing the channel size from 32 to 64 and then 128. Each convolution is followed by batch normalization and a ReLU activation, with $2\times2$ max pooling applied after the second and third layer. The resulting feature maps are flattened and passed through a linear layer to obtain a 256-dimensional embedding. This embedding is then input to the LSTM with a hidden size of 256, using a dropout of 0.2 during training. Finally, the regression head processes the last hidden state through a four-layered neural network with layer sizes [256, 256, 128, $N_{out}$] and ReLU activations, respectively linear activation for the last layer.
 
-The model was trained for a maximum of 40 epochs using early-stopping and a batch size of 32. Optimization was performed via AdamW with a learning rate of $1\times10^{-4}$ and a weight decay of $1\times10^{-2}$.
+The model was trained for a maximum of 40 epochs using early-stopping with patience 5 and a batch size of 32. Optimization was performed via AdamW with a learning rate of $1\times10^{-4}$ and a weight decay of $1\times10^{-2}$.
 
-To assess the model performance, we utilize two metrics: Mean Per Joint Position Error (MPJPE) and Percentage of Correct Key Points (PCK) \cite[22 f.]{zheng2023deeplearningbasedhuman}. MPJPE quantifies the average Euclidean distance in cm between estimated and target joints, while PCK measures the percentage of estimates whose distance errors fall below a threshold, which we set at 5~cm (PCK@5) and 10~cm (PCK@10).
+To assess model performance, we utilize two metrics: Mean Per Joint Position Error (MPJPE) and Percentage of Correct Key Points (PCK) \cite[22 f.]{zheng2023deeplearningbasedhuman}. MPJPE quantifies the average Euclidean distance in cm between estimated and target joints, while PCK measures the percentage of estimates whose distance errors fall below a threshold, which we set at 5~cm (PCK@5) and 10~cm (PCK@10).
 
-\subsection{Loss function}
-The CNN-LSTM model receives the signals in the ROI sequentially and produces $N_{out}$ coordinate estimates. These coordinates are given into the loss function, which is defined as
+\subsection{Loss Function}
+The CNN-LSTM model receives the signals in the ROI sequentially and produces $N_{out}$ coordinate estimates. These coordinates are passed to the loss function, defined as:
 \begin{equation}
     L_{total} = L_{\text{WMSE}} + \lambda \cdot L_{\text{link}},
     \label{eq:total_loss}
 \end{equation}
-where $\lambda$ is a fixed scalar for weighting $L_{\text{link}}$. For training the model we set $\lambda=0.1$. The $L_{\text{WMSE}}$ (weighted mean squared error) calculates the squared difference between the estimated joint coordinates and their target values, weighted by specific landmark importance and is defined as
+where $\lambda$ is a fixed scalar for weighting $L_{\text{link}}$. For training the model, we set $\lambda=0.1$. The $L_{\text{WMSE}}$ (weighted mean squared error) calculates the squared difference between the estimated joint coordinates and their target values, weighted by specific landmark importance:
 \begin{equation}
 L_{\text{WMSE}} = \frac{1}{B \cdot J \cdot 3} \sum_{i=1}^{B} \sum_{j=1}^{J}\sum_{k=1}^{3} w_j (\hat{y}_{i,j,k} - y_{i,j,k})^2,
 \end{equation} 
-where $B$ is the batch size, $J$ the number of joints, $k$ indexes the $x$, $y$ and $z$ coordinates of each joint, $\hat{y}_{i,j,k}$ the model's predictions and $y_{i,j,k}$ the targets. We increased the weight for the knees and feet to 5 compared to 1 for all other joints, because they are the most active components in a walking scenario. For each estimated joint-pair, we furthermore calculate the Euclidean distance $d$, namely the bone length (e.g. of the lower leg) and use these values in the link loss function which we adopted from \cite{luo2021intelligentcarpetinferring}. It is defined as 
+where $B$ is the batch size, $J$ the number of joints, $k$ indexes the $x$, $y$ and $z$ coordinates of each joint, $\hat{y}_{i,j,k}$ the model's predictions and $y_{i,j,k}$ the targets. We increased the weight for the knees and feet to 5 compared to 1 for all other joints, because they are the most important components for walking. For each estimated joint pair, we furthermore calculate the Euclidean distance $d$, namely the bone length (e.g. of the lower leg) and use these values in the link loss function adopted from \cite{luo2021intelligentcarpetinferring}. It is defined as the mean error over the set of all links ($l$):
 \begin{equation}
-L_{\text{link}}(d) =
+L_{\text{link}}^l(d) =
 \begin{cases}
-k_{\text{min}} - d, & \text{if } d < k_{\text{min}} \\
-d - k_{\text{max}}, & \text{if } d > k_{\text{max}} \\
+k_{\text{min}}^l - d, & \text{if } d < k_{\text{min}}^l \\
+d - k_{\text{max}}^l, & \text{if } d > k_{\text{max}}^l \\
 0, & \text{otherwise},
 \end{cases}
 \end{equation} 
-where $k_{\text{min}}$ and $k_{\text{max}}$ are the $3^{\text{th}}$ and $97^{\text{th}}$ percentiles of the link lengths in the training set. The link loss is employed to enforce anatomical consistency and maintain correct proportions of body part lengths.
+where $k_{\text{min}}^l$ and $k_{\text{max}}^l$ are the $3^{\text{rd}}$ and $97^{\text{th}}$ percentiles of the link lengths in the training set. The link loss is employed to enforce anatomical consistency and maintain correct proportions of body part lengths.
 
-% Describe localization
-% - Sensor & clustering of signals
-% - Kalman filter approach
-% - Component values
-% - What is the output?
+
 \subsection{Localization}
 \label{subsec:localization}
-To integrate the local pose estimate from the model into the global coordinate system of the floor, we developed a pipeline that tracks the subject's hip position relative to the SensFloor. We do this by extracting a raw pose estimate through clustering the measured sensor activations and applying a Kalman filter to smoothen the trajectory.
+To integrate the local pose estimate from the model into the global coordinate system of the floor, we developed a pipeline that tracks the subject's hip position relative to the SensFloor. We extract a raw pose estimate by clustering the measured sensor activations and applying a Kalman filter to smooth the trajectory.
 
-We identify the subject's contact points with the floor by grouping adjacent active sensor fields into clusters. The hip position is then calculated the following way: during a step, when both feet touch the ground, two clusters can be measured. In this case, we define the hip position as the midpoint between the centroids of the two clusters. If only one cluster is detected, meaning one foot is off the ground or both feet are close together, we assume the hip is located directly above that single centroid. This logic is illustrated in Figure \ref{fig:signal-clustering} and allows us to extract the hip position from the received signals.
+We identify the subject's contact points with the floor by grouping adjacent active sensor fields into clusters. The hip position is then calculated the in following way: during a step, when both feet touch the ground, two clusters can be measured. In this case, we define the hip position as the midpoint between the centroids of the two clusters. If only one cluster is detected, meaning one foot is off the ground or both feet are close together, we assume the hip is located directly above that single centroid. This logic is illustrated in Figure \ref{fig:signal-clustering} and allows us to extract the hip position from the received signals.
 
 \begin{figure}[htbp]
     \centering
@@ -110,4 +91,4 @@ Because the raw position estimates are noisy and lead to erratic, unnatural move
 
 
 \subsection{Visualization of Predicted 3D Pose}
-For visual evaluating and demo-purposes of the pose estimation pipeline, we furthermore implemented a frontend. The estimated pose and its position are streamed to the frontend using a WebSocket. The frontend then visualizes a simulated environment of the floor and the person's pose moving on it.
+For visual evaluating and demonstrating of the pose estimation pipeline, we furthermore implemented a frontend. The estimated pose and its position are streamed to the frontend using a WebSocket. The frontend then visualizes a simulated environment of the floor and the person's pose moving on it.
