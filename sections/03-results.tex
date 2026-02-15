@@ -23,7 +23,7 @@ In contrast, the wrists and ankles, as the most distal joints, move the most and
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\columnwidth]{img/test_metrics_boxplot.pdf}
-    \caption{Boxplot of Mean Per Joint Position Error (MPJPE) for each joint on test. The box indicates the interquartile range and the whiskers mark the $5^{th}$ and $95^{th}$ percentile.} %TODO: remove samples if not enough space
+    \caption{Boxplot of Mean Per Joint Position Error (MPJPE) for each joint on the test set with $n = 21898$ samples. The box indicates the interquartile range and the whiskers mark the $5^{th}$ and $95^{th}$ percentile.}
     \Description{}
     \label{fig:mpjpe}
 \end{figure}
@@ -42,7 +42,7 @@ However, applying the Kalman filter largely reduces these issues, as illustrated
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\columnwidth]{img/kalman-filter-effect.pdf}
-    \caption{Comparison of raw (left) and filtered (right) localization trajectories. The arrows indicate the direction of the movement, a smaller movement results in a smaller arrow.}
+    \caption{Comparison of raw (left) and filtered (right) localization trajectories. The arrows indicate the direction of the movement, a shorter movement results in a smaller arrow.}
     \Description{}
     \label{fig:kalman-filter-effect}
 \end{figure}
